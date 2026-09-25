@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PokeStock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EAEFE9;
+    --paper-2: #DEE6DE;
+    --ink: #1B231F;
+    --ink-soft: #4B564F;
+    --line: #C7D1C6;
+    --card: #F7FAF6;
+    --gold: #B8862B;
+    --gold-deep: #8F6A20;
+    --teal: #2F6E62;
+    --brick: #8B3A3A;
+    --brick-bg: #F3E4E0;
+    --radius: 3px;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #171B18;
+      --paper-2: #1F251F;
+      --ink: #E8EDE7;
+      --ink-soft: #A7B3A9;
+      --line: #333D33;
+      --card: #1D231E;
+      --gold: #D8A94A;
+      --gold-deep: #B8862B;
+      --teal: #4E9385;
+      --brick: #C97B7B;
+      --brick-bg: #2E1E1E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171B18;
+    --paper-2: #1F251F;
+    --ink: #E8EDE7;
+    --ink-soft: #A7B3A9;
+    --line: #333D33;
+    --card: #1D231E;
+    --gold: #D8A94A;
+    --gold-deep: #B8862B;
+    --teal: #4E9385;
+    --brick: #C97B7B;
+    --brick-bg: #2E1E1E;
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* ---- Hero ---- */
+  .hero {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    flex-wrap: wrap; gap: 20px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 22px; margin-bottom: 6px;
+  }
+  .brand { display:flex; align-items:baseline; gap:10px; }
+  .brand .mark {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em;
+  }
+  .brand .mark em { font-style: normal; color: var(--gold-deep); }
+  .brand .tag { font-size: 12.5px; color: var(--ink-soft); }
+  .stat-block { text-align: right; }
+  .stat-block .value {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 40px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-block .label { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+  .stat-sub { display:flex; gap:18px; margin-top:6px; justify-content:flex-end; font-size: 12.5px; color: var(--ink-soft); }
+  .stat-sub b { color: var(--ink); font-weight: 600; }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    margin: 18px 0 0;
+  }
+  .search {
+    flex: 1; min-width: 180px;
+    font-family: inherit; font-size: 14px;
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--card); color: var(--ink);
+  }
+  .search:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+  .btn {
+    font-family: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink);
+    background: var(--ink); color: var(--paper); cursor: pointer;
+  }
+  .btn:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+  .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .btn.secondary {
+    background: transparent; color: var(--ink); border-color: var(--line);
+  }
+  .btn.secondary:hover { border-color: var(--ink); background: var(--card); }
+
+  /* ---- Binder tabs (category filter) ---- */
+  .tabs {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-top: 16px; padding-left: 2px;
+  }
+  .tab {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 7px 13px 8px; cursor: pointer; user-select: none;
+    background: var(--paper-2); color: var(--ink-soft);
+    border: 1px solid var(--line); border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    position: relative; top: 1px;
+  }
+  .tab[data-active="true"] {
+    background: var(--card); color: var(--ink);
+    border-color: var(--ink); border-bottom: 1px solid var(--card);
+  }
+  .tab .n { color: var(--ink-soft); font-weight: 500; margin-left: 5px; }
+  .tab[data-active="true"] .n { color: var(--gold-deep); }
+
+  /* ---- Table ---- */
+  .panel {
+    background: var(--card); border: 1px solid var(--ink); border-top: none;
+    border-radius: 0 6px 6px 6px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; font-weight: 600; color: var(--ink-soft);
+    font-size: 11.5px; letter-spacing: 0.02em;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+    cursor: pointer; white-space: nowrap;
+  }
+  thead th:hover { color: var(--ink); }
+  thead th.num { text-align: right; }
+  thead th .arrow { font-size: 10px; margin-left: 3px; color: var(--gold-deep); }
+  tbody td { padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.sold { opacity: 0.45; }
+  tbody tr.sold .nimi { text-decoration: line-through; }
+  .nimi { font-weight: 600; }
+  .num-cell { font-family: 'IBM Plex Mono', monospace; }
+  td.arvo { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .chip {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--paper-2); color: var(--ink-soft); border: 1px solid var(--line);
+  }
+  .row-actions { text-align: right; white-space: nowrap; }
+  .icon-btn {
+    font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    background: none; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 5px 10px; color: var(--ink-soft);
+  }
+  .icon-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .icon-btn.sold-btn[data-sold="true"] { color: var(--brick); border-color: var(--brick); background: var(--brick-bg); }
+  .empty { padding: 46px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
+
+  /* ---- Modal (Lisaa kortti) ---- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(20,24,20,0.45);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 8vh 16px; z-index: 20; overflow-y:auto;
+  }
+  .overlay[data-open="true"] { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--ink); border-radius: 6px;
+    width: 100%; max-width: 420px; padding: 24px;
+  }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 21px; margin: 0 0 4px; font-weight: 600; }
+  .modal .sub { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%; font-family: inherit; font-size: 14px;
+    padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--paper); color: var(--ink);
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+  .modal-actions { display:flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+
+  @media (max-width: 640px) {
+    .hero { align-items: flex-start; }
+    .stat-block { text-align: left; }
+    .stat-sub { justify-content: flex-start; }
+    thead th:nth-child(2), tbody td:nth-child(2) { display: none; }
+    .wrap { padding: 20px 14px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div>
+      <div class="brand">
+        <span class="mark">Poke<em>Stock</em></span>
+      </div>
+      <div class="tag">Joonan korttivaraston hallinta</div>
+    </div>
+    <div class="stat-block">
+      <div class="value" id="totalValue">—</div>
+      <div class="label">kokoelman arvo, myymättä olevat</div>
+      <div class="stat-sub">
+        <span><b id="totalCount">0</b> korttia</span>
+        <span><b id="soldCount">0</b> myyty</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search" id="searchInput" type="text" placeholder="Hae kortin nimellä tai numerolla…">
+    <button class="btn secondary" id="exportBtn" type="button" style="display:none;">Vie CSV</button>
+    <button class="btn" id="addBtn" type="button">+ Lisää kortti</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="nimi">Kortti <span class="arrow" data-arrow="nimi"></span></th>
+          <th data-sort="kategoria">Kategoria <span class="arrow" data-arrow="kategoria"></span></th>
+          <th data-sort="kunto">Kunto <span class="arrow" data-arrow="kunto"></span></th>
+          <th class="num" data-sort="arvo">Arvo <span class="arrow" data-arrow="arvo"></span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none;">Ei kortteja tällä haulla.</div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Lisää kortti</h2>
+    <p class="sub">Kortti tallentuu tähän selaimeen.</p>
+    <form id="addForm">
+      <div class="field">
+        <label for="f_nimi">Kortin nimi</label>
+        <input id="f_nimi" required placeholder="esim. Charizard VMAX">
+      </div>
+      <div class="field">
+        <label for="f_numero">Numero</label>
+        <input id="f_numero" placeholder="esim. 020/189">
+      </div>
+      <div class="field">
+        <label for="f_kategoria">Kategoria</label>
+        <select id="f_kategoria">
+          <option>Kiilto</option>
+          <option>Tähti</option>
+          <option>Trainer</option>
+          <option>Erikois</option>
+          <option>Vanhat</option>
+          <option>Pienet sarjat</option>
+          <option>Bulk</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f_kunto">Kunto</label>
+        <select id="f_kunto">
+          <option>NM/M</option>
+          <option>EX</option>
+          <option>LP</option>
+          <option>PL</option>
+          <option>DMG</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f_arvo">Arvo (€)</label>
+        <input id="f_arvo" type="number" step="0.01" min="0" required placeholder="0.00">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelBtn">Peruuta</button>
+        <button type="submit" class="btn">Lisää varastoon</button>
+      </div>
+      <div class="hint">Kategoriat vastaavat fyysisiä korttikansioitasi (Kiilto, Tähti, Trainer…), jotta varasto ja hyllyt pysyvät samassa järjestyksessä.</div>
+    </form>
+  </div>
+</div>
+
+<script>
+const SEED_CARDS = [{"id": 1, "nimi": "Gardevoir & Sylveon-GX", "numero": "205/214", "kategoria": "Kiilto", "arvo": 513.95, "kunto": "NM/M"}, {"id": 2, "nimi": "Naganadel & Guzzlord-GX", "numero": "224/236", "kategoria": "Kiilto", "arvo": 119.95, "kunto": "NM/M"}, {"id": 3, "nimi": "Pokemon Center Lady", "numero": "105/106", "kategoria": "Kiilto", "arvo": 99.95, "kunto": "NM/M"}, {"id": 4, "nimi": "Garchomp C LV.X", "numero": "145/147", "kategoria": "Kiilto", "arvo": 86.95, "kunto": "NM/M"}, {"id": 5, "nimi": "Lucario & Melmetal-GX", "numero": "203/214", "kategoria": "Kiilto", "arvo": 79.95, "kunto": "NM/M"}, {"id": 6, "nimi": "Greninja & Zoroark-GX", "numero": "107/214", "kategoria": "Kiilto", "arvo": 69.95, "kunto": "NM/M"}, {"id": 7, "nimi": "Lillie", "numero": "147/149", "kategoria": "Vanhat", "arvo": 65.95, "kunto": "NM/M"}, {"id": 8, "nimi": "Magmortar LV.X", "numero": "123/123", "kategoria": "Tähti", "arvo": 53.95, "kunto": "NM/M"}, {"id": 9, "nimi": "Espeon EX", "numero": "52/122", "kategoria": "Kiilto", "arvo": 41.95, "kunto": "NM/M"}, {"id": 10, "nimi": "Arceus & Dialga & Palkia-GX", "numero": "156/236", "kategoria": "Kiilto", "arvo": 37.95, "kunto": "NM/M"}, {"id": 11, "nimi": "Articuno GX", "numero": "154/168", "kategoria": "Kiilto", "arvo": 37.95, "kunto": "NM/M"}, {"id": 12, "nimi": "Ash's Pikachu", "numero": "SM113", "kategoria": "Erikois", "arvo": 35.82, "kunto": "NM"}, {"id": 13, "nimi": "Charizard EX", "numero": "12/108", "kategoria": "Kiilto", "arvo": 32.95, "kunto": "NM/M"}, {"id": 14, "nimi": "Raichu", "numero": "10/123", "kategoria": "Tähti", "arvo": 31.95, "kunto": "NM/M"}, {"id": 15, "nimi": "Faba", "numero": "208/214", "kategoria": "Kiilto", "arvo": 24.0, "kunto": "NM/M"}, {"id": 16, "nimi": "Abra", "numero": "46/144", "kategoria": "Vanhat", "arvo": 23.0, "kunto": "NM/M"}, {"id": 17, "nimi": "Ampharos Prime", "numero": "105/123", "kategoria": "Vanhat", "arvo": 17.54, "kunto": "NM"}, {"id": 18, "nimi": "Blissey Prime", "numero": "106/123", "kategoria": "Erikois", "arvo": 16.56, "kunto": "NM"}, {"id": 19, "nimi": "Quagsire", "numero": "9/123", "kategoria": "Vanhat", "arvo": 16.0, "kunto": "NM/M"}, {"id": 20, "nimi": "Spidops ex", "numero": "243/198", "kategoria": "Kiilto", "arvo": 15.5, "kunto": "NM/M"}, {"id": 21, "nimi": "Charizard V", "numero": "013/185", "kategoria": "Kiilto", "arvo": 13.8, "kunto": "Unranked"}, {"id": 22, "nimi": "Reshiram & Charizard-GX", "numero": "020/214", "kategoria": "Kiilto", "arvo": 13.8, "kunto": "Unranked"}, {"id": 23, "nimi": "Azumarill", "numero": "2/123", "kategoria": "Vanhat", "arvo": 13.5, "kunto": "NM/M"}, {"id": 24, "nimi": "Voltorb", "numero": "85/112", "kategoria": "Vanhat", "arvo": 13.0, "kunto": "NM/M"}, {"id": 25, "nimi": "Lapras", "numero": "24/123", "kategoria": "Tähti", "arvo": 13.0, "kunto": "NM/M"}, {"id": 26, "nimi": "Charizard ex", "numero": "006/165", "kategoria": "Kiilto", "arvo": 13.0, "kunto": "NM/M"}, {"id": 27, "nimi": "Blastoise EX", "numero": "21/108", "kategoria": "Kiilto", "arvo": 12.5, "kunto": "NM/M"}, {"id": 28, "nimi": "Heracross", "numero": "43/123", "kategoria": "Vanhat", "arvo": 12.0, "kunto": "NM/M"}, {"id": 29, "nimi": "Double Colorless Energy", "numero": "103/123", "kategoria": "Trainer", "arvo": 9.5, "kunto": "NM/M"}, {"id": 30, "nimi": "Life Dew", "numero": "107/116", "kategoria": "Kiilto", "arvo": 9.5, "kunto": "NM/M"}, {"id": 31, "nimi": "Sunflora", "numero": "31/123", "kategoria": "Tähti", "arvo": 9.0, "kunto": "NM/M"}, {"id": 32, "nimi": "Muscle Band", "numero": "121/146", "kategoria": "Kiilto", "arvo": 8.95, "kunto": "NM/M"}, {"id": 33, "nimi": "Jumpluff", "numero": "6/123", "kategoria": "Vanhat", "arvo": 8.0, "kunto": "NM/M"}, {"id": 34, "nimi": "Gold Potion", "numero": "140/149", "kategoria": "Kiilto", "arvo": 8.0, "kunto": "NM/M"}, {"id": 35, "nimi": "Surfing Pikachu VMAX", "numero": "009/025", "kategoria": "Kiilto", "arvo": 7.36, "kunto": "Unranked"}, {"id": 36, "nimi": "Nidoran (F)", "numero": "029/165", "kategoria": "Kiilto", "arvo": 6.5, "kunto": "NM/M"}, {"id": 37, "nimi": "Persian", "numero": "27/123", "kategoria": "Tähti", "arvo": 6.0, "kunto": "NM/M"}, {"id": 38, "nimi": "Kakuna", "numero": "014/165", "kategoria": "Kiilto", "arvo": 6.0, "kunto": "NM/M"}, {"id": 39, "nimi": "Pidgeotto", "numero": "017/165", "kategoria": "Kiilto", "arvo": 6.0, "kunto": "NM/M"}, {"id": 40, "nimi": "Blastoise ex", "numero": "009/165", "kategoria": "Kiilto", "arvo": 5.5, "kunto": "NM/M"}, {"id": 41, "nimi": "Metapod", "numero": "011/165", "kategoria": "Kiilto", "arvo": 5.5, "kunto": "NM/M"}, {"id": 42, "nimi": "Rayquaza", "numero": "106/145", "kategoria": "Tähti", "arvo": 5.0, "kunto": "NM/M"}, {"id": 43, "nimi": "Pikachu V", "numero": "043/185", "kategoria": "Vanhat", "arvo": 5.0, "kunto": "NM/M"}, {"id": 44, "nimi": "Kabuto", "numero": "78/181", "kategoria": "Kiilto", "arvo": 5.0, "kunto": "NM/M"}, {"id": 45, "nimi": "Mewtwo & Mew-GX", "numero": "071/236", "kategoria": "Kiilto", "arvo": 4.6, "kunto": "Unranked"}, {"id": 46, "nimi": "Venusaur ex", "numero": "003/165", "kategoria": "Kiilto", "arvo": 4.5, "kunto": "NM/M"}, {"id": 47, "nimi": "Nidoran (M)", "numero": "032/165", "kategoria": "Kiilto", "arvo": 4.5, "kunto": "NM/M"}, {"id": 48, "nimi": "Mewtwo", "numero": "51/108", "kategoria": "Vanhat", "arvo": 4.25, "kunto": "NM/M"}, {"id": 49, "nimi": "Quilava", "numero": "49/123", "kategoria": "Tähti", "arvo": 4.0, "kunto": "NM/M"}, {"id": 50, "nimi": "Black Market", "numero": "134/181", "kategoria": "Kiilto", "arvo": 4.0, "kunto": "NM/M"}, {"id": 51, "nimi": "Krookodile", "numero": "71/146", "kategoria": "Tähti", "arvo": 3.75, "kunto": "NM/M"}, {"id": 52, "nimi": "Kartana", "numero": "101/168", "kategoria": "Tähti", "arvo": 3.75, "kunto": "NM/M"}, {"id": 53, "nimi": "Gyarados", "numero": "31/113", "kategoria": "Tähti", "arvo": 3.75, "kunto": "NM/M"}, {"id": 54, "nimi": "Tapu Koko Prism Star", "numero": "51/181", "kategoria": "Kiilto", "arvo": 3.75, "kunto": "NM/M"}, {"id": 55, "nimi": "Ninetales", "numero": "038/165", "kategoria": "Vanhat", "arvo": 3.5, "kunto": "NM/M"}, {"id": 56, "nimi": "Gastly", "numero": "#92", "kategoria": "Vanhat", "arvo": 3.27, "kunto": "NM"}, {"id": 57, "nimi": "Here Comes Team Rocket!", "numero": "113/108", "kategoria": "Trainer", "arvo": 3.0, "kunto": "NM/M"}, {"id": 58, "nimi": "Sharpedo", "numero": "22/109", "kategoria": "Vanhat", "arvo": 3.0, "kunto": "NM/M"}, {"id": 59, "nimi": "Zacian V", "numero": "138/202", "kategoria": "Vanhat", "arvo": 3.0, "kunto": "NM/M"}, {"id": 60, "nimi": "Zamazenta V", "numero": "139/202", "kategoria": "Vanhat", "arvo": 3.0, "kunto": "NM/M"}, {"id": 61, "nimi": "Turtonator GX", "numero": "18/145", "kategoria": "Kiilto", "arvo": 3.0, "kunto": "NM/M"}, {"id": 62, "nimi": "Genesect", "numero": "10/101", "kategoria": "Kiilto", "arvo": 3.0, "kunto": "NM/M"}, {"id": 63, "nimi": "Spearow", "numero": "021/165", "kategoria": "Kiilto", "arvo": 3.0, "kunto": "NM/M"}, {"id": 64, "nimi": "Pikachu", "numero": "60/64", "kategoria": "Vanhat", "arvo": 2.98, "kunto": "NM"}, {"id": 65, "nimi": "Pikachu & Zekrom-GX", "numero": "033/181", "kategoria": "Kiilto", "arvo": 2.76, "kunto": "Unranked"}, {"id": 66, "nimi": "Mewtwo EX", "numero": "XY107", "kategoria": "Kiilto", "arvo": 2.76, "kunto": "Unranked"}, {"id": 67, "nimi": "Heat Factory", "numero": "178/214", "kategoria": "Kiilto", "arvo": 2.75, "kunto": "NM/M"}, {"id": 68, "nimi": "Flareon", "numero": "SM186", "kategoria": "Erikois", "arvo": 2.62, "kunto": "NM"}, {"id": 69, "nimi": "Geodude", "numero": "110/165", "kategoria": "Vanhat", "arvo": 2.5, "kunto": "NM/M"}, {"id": 70, "nimi": "Geodude", "numero": "110/165", "kategoria": "Vanhat", "arvo": 2.5, "kunto": "NM/M"}, {"id": 71, "nimi": "Team Aqua's Seviper", "numero": "17/95", "kategoria": "Vanhat", "arvo": 2.25, "kunto": "NM"}, {"id": 72, "nimi": "Alolan Sandslash", "numero": "20/145", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 73, "nimi": "Ekans", "numero": "023/165", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 74, "nimi": "Nidoqueen", "numero": "031/165", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 75, "nimi": "Nidorino", "numero": "033/165", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 76, "nimi": "Clefable", "numero": "036/165", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 77, "nimi": "Vulpix", "numero": "037/165", "kategoria": "Kiilto", "arvo": 2.0, "kunto": "NM/M"}, {"id": 78, "nimi": "Snivy (holo)", "numero": "5/25", "kategoria": "Pienet sarjat", "arvo": 1.84, "kunto": "Unranked"}, {"id": 79, "nimi": "Dragapult V", "numero": "092/192", "kategoria": "Kiilto", "arvo": 1.84, "kunto": "Unranked"}, {"id": 80, "nimi": "Dedenne GX", "numero": "195/236", "kategoria": "Kiilto", "arvo": 1.84, "kunto": "Unranked"}, {"id": 81, "nimi": "Rowlet & Alolan Exeggutor-GX", "numero": "001/214", "kategoria": "Kiilto", "arvo": 1.84, "kunto": "Unranked"}, {"id": 82, "nimi": "Victreebel", "numero": "3/145", "kategoria": "Tähti", "arvo": 1.75, "kunto": "NM/M"}, {"id": 83, "nimi": "Bulbasaur", "numero": "001/165", "kategoria": "Kiilto", "arvo": 1.75, "kunto": "NM/M"}, {"id": 84, "nimi": "Wartortle", "numero": "008/165", "kategoria": "Kiilto", "arvo": 1.75, "kunto": "NM/M"}, {"id": 85, "nimi": "Butterfree", "numero": "012/165", "kategoria": "Kiilto", "arvo": 1.75, "kunto": "NM/M"}, {"id": 86, "nimi": "Weedle", "numero": "013/165", "kategoria": "Kiilto", "arvo": 1.75, "kunto": "NM/M"}, {"id": 87, "nimi": "Rattata", "numero": "019/165", "kategoria": "Kiilto", "arvo": 1.75, "kunto": "NM/M"}, {"id": 88, "nimi": "Malamar", "numero": "76/146", "kategoria": "Kiilto", "arvo": 1.7, "kunto": "LP"}, {"id": 89, "nimi": "Charizard Spirit Link", "numero": "75/108", "kategoria": "Trainer", "arvo": 1.5, "kunto": "NM/M"}, {"id": 90, "nimi": "Rainbow Energy", "numero": "131/146", "kategoria": "Trainer", "arvo": 1.5, "kunto": "NM/M"}, {"id": 91, "nimi": "Counter Energy", "numero": "100/111", "kategoria": "Trainer", "arvo": 1.5, "kunto": "NM/M"}, {"id": 92, "nimi": "Draw Energy", "numero": "209/236", "kategoria": "Trainer", "arvo": 1.5, "kunto": "NM/M"}, {"id": 93, "nimi": "Phione", "numero": "57/236", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 94, "nimi": "Qwilfish", "numero": "50/123", "kategoria": "Vanhat", "arvo": 1.5, "kunto": "NM/M"}, {"id": 95, "nimi": "Starmie", "numero": "31/108", "kategoria": "Vanhat", "arvo": 1.5, "kunto": "NM/M"}, {"id": 96, "nimi": "Electabuzz", "numero": "41/108", "kategoria": "Vanhat", "arvo": 1.5, "kunto": "NM/M"}, {"id": 97, "nimi": "Revive", "numero": "85/108", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 98, "nimi": "Mightyena", "numero": "87/181", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 99, "nimi": "Honchkrow", "numero": "79/145", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 100, "nimi": "Alolan Muk", "numero": "84/181", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 101, "nimi": "Pinsir", "numero": "9/181", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 102, "nimi": "Raticate", "numero": "88/122", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 103, "nimi": "Empoleon", "numero": "56/236", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 104, "nimi": "Zygarde", "numero": "53/124", "kategoria": "Tähti", "arvo": 1.5, "kunto": "NM/M"}, {"id": 105, "nimi": "Yveltal", "numero": "019/025", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 106, "nimi": "Max Potion", "numero": "103/122", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 107, "nimi": "Caitlin", "numero": "78/101", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 108, "nimi": "Cassius", "numero": "115/146", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 109, "nimi": "Pidgey", "numero": "016/165", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 110, "nimi": "Pidgeot", "numero": "018/165", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 111, "nimi": "Raichu", "numero": "026/165", "kategoria": "Kiilto", "arvo": 1.5, "kunto": "NM/M"}, {"id": 112, "nimi": "Lucario V", "numero": "079/189", "kategoria": "Kiilto", "arvo": 1.38, "kunto": "Unranked"}, {"id": 113, "nimi": "Grimmsnarl V", "numero": "115/192", "kategoria": "Kiilto", "arvo": 1.38, "kunto": "Unranked"}, {"id": 114, "nimi": "Galarian Articuno V", "numero": "058/198", "kategoria": "Kiilto", "arvo": 1.38, "kunto": "Unranked"}, {"id": 115, "nimi": "Boss's Orders", "numero": "114/192", "kategoria": "Kiilto", "arvo": 1.38, "kunto": "Unranked"}, {"id": 116, "nimi": "Pokedex", "numero": "82/108", "kategoria": "Trainer", "arvo": 1.25, "kunto": "NM/M"}, {"id": 117, "nimi": "Krookodile", "numero": "85/149", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 118, "nimi": "Delphox", "numero": "13/124", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 119, "nimi": "Squirtle", "numero": "007/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 120, "nimi": "Caterpie", "numero": "010/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 121, "nimi": "Raticate", "numero": "020/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 122, "nimi": "Fearow", "numero": "022/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 123, "nimi": "Pikachu", "numero": "025/165", "kategoria": "Vanhat", "arvo": 1.25, "kunto": "NM/M"}, {"id": 124, "nimi": "Sandshrew", "numero": "027/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 125, "nimi": "Sandslash", "numero": "028/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 126, "nimi": "Nidorina", "numero": "030/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 127, "nimi": "Clefairy", "numero": "035/165", "kategoria": "Kiilto", "arvo": 1.25, "kunto": "NM/M"}, {"id": 128, "nimi": "Switch", "numero": "88/108", "kategoria": "Trainer", "arvo": 1.0, "kunto": "NM/M"}, {"id": 129, "nimi": "Professor Oak's Hint", "numero": "84/108", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 130, "nimi": "Welder", "numero": "189/214", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 131, "nimi": "Electrode", "numero": "40/108", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 132, "nimi": "Ivysaur", "numero": "002/165", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 133, "nimi": "Charmander", "numero": "004/165", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 134, "nimi": "Beedrill", "numero": "015/165", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 135, "nimi": "Nidoking", "numero": "034/165", "kategoria": "Kiilto", "arvo": 1.0, "kunto": "NM/M"}, {"id": 136, "nimi": "Piplup", "numero": "20/25", "kategoria": "Pienet sarjat", "arvo": 0.98, "kunto": "NM"}, {"id": 137, "nimi": "Eldegoss V", "numero": "019/192", "kategoria": "Kiilto", "arvo": 0.92, "kunto": "Unranked"}, {"id": 138, "nimi": "Toxtricity V", "numero": "070/192", "kategoria": "Kiilto", "arvo": 0.92, "kunto": "Unranked"}, {"id": 139, "nimi": "Aerodactyl LV.47", "numero": "13/99", "kategoria": "Kiilto", "arvo": 0.92, "kunto": "Unranked"}, {"id": 140, "nimi": "Mudkip", "numero": "19/25", "kategoria": "Pienet sarjat", "arvo": 0.84, "kunto": "NM"}, {"id": 141, "nimi": "Blastoise Spirit Link", "numero": "73/108", "kategoria": "Trainer", "arvo": 0.75, "kunto": "NM/M"}, {"id": 142, "nimi": "Swellow", "numero": "104/145", "kategoria": "Tähti", "arvo": 0.75, "kunto": "NM/M"}, {"id": 143, "nimi": "Frogadier", "numero": "40/146", "kategoria": "Kiilto", "arvo": 0.75, "kunto": "NM/M"}, {"id": 144, "nimi": "Frozen City", "numero": "100/116", "kategoria": "Kiilto", "arvo": 0.75, "kunto": "NM/M"}, {"id": 145, "nimi": "Charmeleon", "numero": "005/165", "kategoria": "Kiilto", "arvo": 0.75, "kunto": "NM/M"}, {"id": 146, "nimi": "Lapras", "numero": "5/12", "kategoria": "Kiilto", "arvo": 0.64, "kunto": "Unranked"}, {"id": 147, "nimi": "Parasect", "numero": "48/123", "kategoria": "Vanhat", "arvo": 0.63, "kunto": "NM"}, {"id": 148, "nimi": "Totodile", "numero": "18/25", "kategoria": "Pienet sarjat", "arvo": 0.62, "kunto": "NM"}, {"id": 149, "nimi": "Metal Energy", "numero": "80/90", "kategoria": "Trainer", "arvo": 0.59, "kunto": "NM"}, {"id": 150, "nimi": "Sobble", "numero": "24/25", "kategoria": "Pienet sarjat", "arvo": 0.57, "kunto": "NM"}, {"id": 151, "nimi": "Oddish", "numero": "58/64", "kategoria": "Vanhat", "arvo": 0.55, "kunto": "NM"}, {"id": 152, "nimi": "Alolan Sandshrew", "numero": "4/12", "kategoria": "Kiilto", "arvo": 0.55, "kunto": "Unranked"}, {"id": 153, "nimi": "Rattata", "numero": "66/108", "kategoria": "Vanhat", "arvo": 0.5, "kunto": "NM/M"}, {"id": 154, "nimi": "Pidgeot Spirit Link", "numero": "81/108", "kategoria": "Vanhat", "arvo": 0.5, "kunto": "NM/M"}, {"id": 155, "nimi": "Pokemon Fan Club", "numero": "94/106", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 156, "nimi": "Repel", "numero": "130/149", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 157, "nimi": "Brock's Grit", "numero": "74/108", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 158, "nimi": "Doctor", "numero": "134/198", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 159, "nimi": "Wishful Baton", "numero": "128/147", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 160, "nimi": "Tormenting Spray", "numero": "125/147", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 161, "nimi": "Quick Ball", "numero": "179/202", "kategoria": "Kiilto", "arvo": 0.5, "kunto": "NM/M"}, {"id": 162, "nimi": "Chikorita", "numero": "2/25", "kategoria": "Pienet sarjat", "arvo": 0.46, "kunto": "NM"}, {"id": 163, "nimi": "Eevee", "numero": "12/12", "kategoria": "Kiilto", "arvo": 0.46, "kunto": "Unranked"}, {"id": 164, "nimi": "Professor's Research", "numero": "024/025", "kategoria": "Kiilto", "arvo": 0.46, "kunto": "Unranked"}, {"id": 165, "nimi": "Staryu", "numero": "56/64", "kategoria": "Vanhat", "arvo": 0.45, "kunto": "NM"}, {"id": 166, "nimi": "Electivire", "numero": "30/111", "kategoria": "Vanhat", "arvo": 0.44, "kunto": "NM"}, {"id": 167, "nimi": "Scorbunny", "numero": "16/25", "kategoria": "Pienet sarjat", "arvo": 0.43, "kunto": "NM"}, {"id": 168, "nimi": "Drowzee", "numero": "49/108", "kategoria": "Vanhat", "arvo": 0.42, "kunto": "NM"}, {"id": 169, "nimi": "Starmie", "numero": "73/160", "kategoria": "Vanhat", "arvo": 0.41, "kunto": "NM"}, {"id": 170, "nimi": "Turtwig", "numero": "4/25", "kategoria": "Pienet sarjat", "arvo": 0.4, "kunto": "NM"}, {"id": 171, "nimi": "Treecko", "numero": "3/25", "kategoria": "Pienet sarjat", "arvo": 0.39, "kunto": "NM"}, {"id": 172, "nimi": "Rowlet", "numero": "7/25", "kategoria": "Pienet sarjat", "arvo": 0.38, "kunto": "NM"}, {"id": 173, "nimi": "Charmeleon", "numero": "10/108", "kategoria": "Kiilto", "arvo": 0.37, "kunto": "Unranked"}, {"id": 174, "nimi": "Chimchar", "numero": "12/25", "kategoria": "Pienet sarjat", "arvo": 0.37, "kunto": "NM"}, {"id": 175, "nimi": "Professor's Research (SWSH)", "numero": "201/202", "kategoria": "Kiilto", "arvo": 0.37, "kunto": "Unranked"}, {"id": 176, "nimi": "Diglett", "numero": "55/108", "kategoria": "Vanhat", "arvo": 0.32, "kunto": "NM"}, {"id": 177, "nimi": "Onix", "numero": "61/108", "kategoria": "Kiilto", "arvo": 0.32, "kunto": "Unranked"}, {"id": 178, "nimi": "Pikachu", "numero": "35/108", "kategoria": "Vanhat", "arvo": 0.32, "kunto": "NM"}, {"id": 179, "nimi": "Snorlax", "numero": "80/106", "kategoria": "Tähti", "arvo": 0.32, "kunto": "Unranked"}, {"id": 180, "nimi": "Charmander", "numero": "9/108", "kategoria": "Vanhat", "arvo": 0.29, "kunto": "NM"}, {"id": 181, "nimi": "Slugma", "numero": "67/90", "kategoria": "Pienet sarjat", "arvo": 0.28, "kunto": "Unranked"}, {"id": 182, "nimi": "Fasasnob (Pidgeot, saksa)", "numero": "86/114", "kategoria": "Tähti", "arvo": 0.28, "kunto": "Unranked"}, {"id": 183, "nimi": "Team Aqua's Poochyena", "numero": "55/95", "kategoria": "Kiilto", "arvo": 0.28, "kunto": "Unranked"}, {"id": 184, "nimi": "Caterpie", "numero": "3/108", "kategoria": "Vanhat", "arvo": 0.27, "kunto": "NM"}, {"id": 185, "nimi": "Wishiwashi", "numero": "31/70", "kategoria": "Pienet sarjat", "arvo": 0.27, "kunto": "NM"}, {"id": 186, "nimi": "Magikarp", "numero": "33/108", "kategoria": "Vanhat", "arvo": 0.24, "kunto": "NM"}, {"id": 187, "nimi": "Growlithe", "numero": "10/99", "kategoria": "Pienet sarjat", "arvo": 0.23, "kunto": "Unranked"}, {"id": 188, "nimi": "Yanmega", "numero": "4/119", "kategoria": "Tähti", "arvo": 0.23, "kunto": "Unranked"}, {"id": 189, "nimi": "Raticate", "numero": "34/90", "kategoria": "Tähti", "arvo": 0.23, "kunto": "Unranked"}, {"id": 190, "nimi": "Golem", "numero": "47/106", "kategoria": "Tähti", "arvo": 0.23, "kunto": "Unranked"}, {"id": 191, "nimi": "Drapion", "numero": "53/156", "kategoria": "Tähti", "arvo": 0.23, "kunto": "Unranked"}, {"id": 192, "nimi": "Bagon", "numero": "42/70", "kategoria": "Pienet sarjat", "arvo": 0.2, "kunto": "NM"}, {"id": 193, "nimi": "Kangaskhan", "numero": "55/70", "kategoria": "Pienet sarjat", "arvo": 0.18, "kunto": "Unranked"}, {"id": 194, "nimi": "Furret", "numero": "82/106", "kategoria": "Tähti", "arvo": 0.18, "kunto": "Unranked"}, {"id": 195, "nimi": "Golurk", "numero": "72/101", "kategoria": "Tähti", "arvo": 0.18, "kunto": "Unranked"}, {"id": 196, "nimi": "Beedrill", "numero": "5/146", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 197, "nimi": "Magcargo", "numero": "21/146", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 198, "nimi": "Snorlax", "numero": "131/202", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 199, "nimi": "Rillaboom", "numero": "014/202", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 200, "nimi": "Cinderace", "numero": "034/202", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 201, "nimi": "Inteleon", "numero": "058/202", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 202, "nimi": "Blacephalon", "numero": "032/214", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 203, "nimi": "Pidgeot", "numero": "123/181", "kategoria": "Kiilto", "arvo": 0.18, "kunto": "Unranked"}, {"id": 204, "nimi": "Sandshrew", "numero": "54/108", "kategoria": "Vanhat", "arvo": 0.16, "kunto": "NM"}, {"id": 205, "nimi": "Sandshrew", "numero": "54/108", "kategoria": "Vanhat", "arvo": 0.16, "kunto": "NM"}, {"id": 206, "nimi": "Magmar", "numero": "20/108", "kategoria": "Vanhat", "arvo": 0.15, "kunto": "NM"}, {"id": 207, "nimi": "Porygon", "numero": "71/108", "kategoria": "Vanhat", "arvo": 0.15, "kunto": "NM"}, {"id": 208, "nimi": "Porygon", "numero": "71/108", "kategoria": "Kiilto", "arvo": 0.15, "kunto": "Unranked"}, {"id": 209, "nimi": "Litten", "numero": "26/214", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 210, "nimi": "Simisear", "numero": "23/146", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 211, "nimi": "Corphish", "numero": "42/66", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 212, "nimi": "Warp Energy", "numero": "95/100", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 213, "nimi": "Life Forest", "numero": "180/214", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 214, "nimi": "Wormadam", "numero": "44/124", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 215, "nimi": "Arbok", "numero": "024/165", "kategoria": "Kiilto", "arvo": 0.14, "kunto": "Unranked"}, {"id": 216, "nimi": "Poliwhirl", "numero": "24/108", "kategoria": "Vanhat", "arvo": 0.13, "kunto": "NM"}, {"id": 217, "nimi": "Tangela", "numero": "8/108", "kategoria": "Vanhat", "arvo": 0.13, "kunto": "NM"}, {"id": 218, "nimi": "Tangela", "numero": "8/108", "kategoria": "Vanhat", "arvo": 0.13, "kunto": "NM"}, {"id": 219, "nimi": "Doduo", "numero": "69/108", "kategoria": "Vanhat", "arvo": 0.1, "kunto": "NM"}, {"id": 220, "nimi": "Weedle", "numero": "5/108", "kategoria": "Vanhat", "arvo": 0.09, "kunto": "NM"}, {"id": 221, "nimi": "Ponyta", "numero": "14/106", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 222, "nimi": "Clamperl", "numero": "49/166", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 223, "nimi": "Buizel", "numero": "28/106", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 224, "nimi": "Linoone", "numero": "112/160", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 225, "nimi": "Spheal", "numero": "037/198", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 226, "nimi": "Litleo", "numero": "19/106", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 227, "nimi": "Pidgey", "numero": "121/181", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 228, "nimi": "Pidgeotto", "numero": "122/181", "kategoria": "Kiilto", "arvo": 0.09, "kunto": "Unranked"}, {"id": 229, "nimi": "Gastly", "numero": "47/108", "kategoria": "Vanhat", "arvo": 0.05, "kunto": "NM"}];
+
+const STORAGE_KEY = 'pokestock_cards_v1';
+const SOLD_KEY = 'pokestock_sold_v1';
+
+function loadCards() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return SEED_CARDS.slice();
+}
+function saveCards(cards) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); } catch (e) {}
+}
+function loadSold() {
+  try {
+    const raw = localStorage.getItem(SOLD_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+}
+function saveSold(soldSet) {
+  try { localStorage.setItem(SOLD_KEY, JSON.stringify(Array.from(soldSet))); } catch (e) {}
+}
+
+let cards = loadCards();
+let sold = loadSold();
+let activeCategory = 'Kaikki';
+let searchTerm = '';
+let sortKey = 'arvo';
+let sortDir = -1; // -1 = desc
+
+const CATS = ['Kaikki','Kiilto','Tähti','Trainer','Erikois','Vanhat','Pienet sarjat','Bulk'];
+
+const eur = n => n.toLocaleString('fi-FI', {style:'currency', currency:'EUR'});
+
+function render() {
+  renderTabs();
+  renderTable();
+  renderStats();
+}
+
+function renderTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  CATS.forEach(cat => {
+    const count = cat === 'Kaikki' ? cards.length : cards.filter(c => c.kategoria === cat).length;
+    const el = document.createElement('div');
+    el.className = 'tab';
+    el.setAttribute('data-active', String(cat === activeCategory));
+    el.innerHTML = `${cat}<span class="n">${count}</span>`;
+    el.addEventListener('click', () => { activeCategory = cat; render(); });
+    tabsEl.appendChild(el);
+  });
+}
+
+function getFiltered() {
+  let list = cards.slice();
+  if (activeCategory !== 'Kaikki') list = list.filter(c => c.kategoria === activeCategory);
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
+    list = list.filter(c => c.nimi.toLowerCase().includes(q) || (c.numero||'').toLowerCase().includes(q));
+  }
+  list.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+  return list;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const list = getFiltered();
+  tbody.innerHTML = '';
+  document.getElementById('emptyState').style.display = list.length ? 'none' : 'block';
+
+  document.querySelectorAll('[data-arrow]').forEach(a => a.textContent = '');
+  const arrowEl = document.querySelector(`[data-arrow="${sortKey}"]`);
+  if (arrowEl) arrowEl.textContent = sortDir === 1 ? '▲' : '▼';
+
+  list.forEach(c => {
+    const isSold = sold.has(c.id);
+    const tr = document.createElement('tr');
+    if (isSold) tr.className = 'sold';
+    tr.innerHTML = `
+      <td>
+        <div class="nimi">${escapeHtml(c.nimi)}</div>
+        <div class="num-cell" style="font-size:11.5px;color:var(--ink-soft);">${escapeHtml(c.numero||'')}</div>
+      </td>
+      <td><span class="chip">${escapeHtml(c.kategoria)}</span></td>
+      <td>${escapeHtml(c.kunto||'—')}</td>
+      <td class="arvo">${eur(c.arvo)}</td>
+      <td class="row-actions">
+        <button class="icon-btn sold-btn" data-sold="${isSold}" data-id="${c.id}">${isSold ? 'Myyty' : 'Merkitse myydyksi'}</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.sold-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.getAttribute('data-id'));
+      if (sold.has(id)) sold.delete(id); else sold.add(id);
+      saveSold(sold);
+      render();
+    });
+  });
+}
+
+function renderStats() {
+  const unsold = cards.filter(c => !sold.has(c.id));
+  const total = unsold.reduce((s,c) => s + c.arvo, 0);
+  document.getElementById('totalValue').textContent = eur(total);
+  document.getElementById('totalCount').textContent = cards.length;
+  document.getElementById('soldCount').textContent = sold.size;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.getAttribute('data-sort');
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = key === 'arvo' ? -1 : 1; }
+    renderTable();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  renderTable();
+});
+
+const overlay = document.getElementById('overlay');
+document.getElementById('addBtn').addEventListener('click', () => overlay.setAttribute('data-open','true'));
+document.getElementById('cancelBtn').addEventListener('click', () => overlay.setAttribute('data-open','false'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.setAttribute('data-open','false'); });
+
+document.getElementById('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const nextId = cards.reduce((m,c) => Math.max(m, c.id), 0) + 1;
+  const card = {
+    id: nextId,
+    nimi: document.getElementById('f_nimi').value.trim(),
+    numero: document.getElementById('f_numero').value.trim(),
+    kategoria: document.getElementById('f_kategoria').value,
+    kunto: document.getElementById('f_kunto').value,
+    arvo: parseFloat(document.getElementById('f_arvo').value) || 0,
+  };
+  cards.push(card);
+  saveCards(cards);
+  e.target.reset();
+  overlay.setAttribute('data-open','false');
+  render();
+});
+
+let downloadsCap = null;
+(async () => {
+  try {
+    if (window.claude && typeof window.claude.use === 'function') {
+      downloadsCap = await window.claude.use('downloads');
+    }
+  } catch (e) { downloadsCap = null; }
+  document.getElementById('exportBtn').style.display = downloadsCap ? '' : 'none';
+})();
+
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  if (!downloadsCap) return;
+  const list = getFiltered();
+  const header = 'nimi,numero,kategoria,kunto,arvo_eur,myyty\n';
+  const body = list.map(c => [
+    c.nimi, c.numero||'', c.kategoria, c.kunto||'',
+    c.arvo.toFixed(2), sold.has(c.id) ? 'kylla' : 'ei'
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  try {
+    await downloadsCap.save({ filename: 'pokestock_vienti.csv', data: header + body });
+  } catch (e) { /* viewer declined or unavailable */ }
+});
+
+render();
+</script>
+</body>
+</html>
