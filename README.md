@@ -28,6 +28,10 @@ esitys/
 
 dokumentaatio/
   AI_kaytto_raporttiin.md     Valmis kappale AI-kayton dokumentointiin raporttiin
+
+fullstack/
+  Node.js + Express + MongoDB + Docker -versio samasta ideasta,
+  full stack -web-kehityksen kurssityota varten. Katso fullstack/README.md.
 ```
 
 ## Kayttoonotto (MySQL / MariaDB)

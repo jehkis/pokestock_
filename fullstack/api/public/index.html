@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PokeStock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EAEFE9; --paper-2: #DEE6DE; --ink: #1B231F; --ink-soft: #4B564F;
+    --line: #C7D1C6; --card: #F7FAF6; --gold: #B8862B; --gold-deep: #8F6A20;
+    --teal: #2F6E62; --brick: #8B3A3A; --brick-bg: #F3E4E0; --radius: 3px;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171B18; --paper-2: #1F251F; --ink: #E8EDE7; --ink-soft: #A7B3A9;
+      --line: #333D33; --card: #1D231E; --gold: #D8A94A; --gold-deep: #B8862B;
+      --teal: #4E9385; --brick: #C97B7B; --brick-bg: #2E1E1E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171B18; --paper-2: #1F251F; --ink: #E8EDE7; --ink-soft: #A7B3A9;
+    --line: #333D33; --card: #1D231E; --gold: #D8A94A; --gold-deep: #B8862B;
+    --teal: #4E9385; --brick: #C97B7B; --brick-bg: #2E1E1E;
+  }
+  html, body { height: 100%; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+  .hero { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; border-bottom: 2px solid var(--ink); padding-bottom: 22px; margin-bottom: 6px; }
+  .brand { display:flex; align-items:baseline; gap:10px; }
+  .brand .mark { font-family: 'Fraunces', serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em; }
+  .brand .mark em { font-style: normal; color: var(--gold-deep); }
+  .brand .tag { font-size: 12.5px; color: var(--ink-soft); }
+  .conn { display:inline-flex; align-items:center; gap:6px; font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .conn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brick); }
+  .conn[data-ok="true"] .dot { background: var(--teal); }
+  .stat-block { text-align: right; }
+  .stat-block .value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-block .label { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+  .stat-sub { display:flex; gap:18px; margin-top:6px; justify-content:flex-end; font-size: 12.5px; color: var(--ink-soft); }
+  .stat-sub b { color: var(--ink); font-weight: 600; }
+  .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 18px 0 0; }
+  .search { flex: 1; min-width: 180px; font-family: inherit; font-size: 14px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--ink); }
+  .search:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+  .btn { font-family: inherit; font-size: 13.5px; font-weight: 600; padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; }
+  .btn:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.secondary:hover { border-color: var(--ink); background: var(--card); }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 16px; padding-left: 2px; }
+  .tab { font-size: 12.5px; font-weight: 600; padding: 7px 13px 8px; cursor: pointer; user-select: none; background: var(--paper-2); color: var(--ink-soft); border: 1px solid var(--line); border-bottom: none; border-radius: 6px 6px 0 0; position: relative; top: 1px; }
+  .tab[data-active="true"] { background: var(--card); color: var(--ink); border-color: var(--ink); border-bottom: 1px solid var(--card); }
+  .tab .n { color: var(--ink-soft); font-weight: 500; margin-left: 5px; }
+  .tab[data-active="true"] .n { color: var(--gold-deep); }
+  .panel { background: var(--card); border: 1px solid var(--ink); border-top: none; border-radius: 0 6px 6px 6px; min-height: 120px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th { text-align: left; font-weight: 600; color: var(--ink-soft); font-size: 11.5px; letter-spacing: 0.02em; padding: 12px 16px; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; }
+  thead th:hover { color: var(--ink); }
+  thead th.num { text-align: right; }
+  thead th .arrow { font-size: 10px; margin-left: 3px; color: var(--gold-deep); }
+  tbody td { padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.sold { opacity: 0.45; }
+  tbody tr.sold .nimi { text-decoration: line-through; }
+  .nimi { font-weight: 600; }
+  .num-cell { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-soft); }
+  td.arvo { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--paper-2); color: var(--ink-soft); border: 1px solid var(--line); }
+  .row-actions { text-align: right; white-space: nowrap; }
+  .icon-btn { font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; background: none; border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 10px; color: var(--ink-soft); margin-left: 6px; }
+  .icon-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .icon-btn.sold-btn[data-sold="true"] { color: var(--brick); border-color: var(--brick); background: var(--brick-bg); }
+  .icon-btn.del-btn:hover { border-color: var(--brick); color: var(--brick); }
+  .empty, .loading, .error-state { padding: 46px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
+  .error-state { color: var(--brick); }
+  .overlay { position: fixed; inset: 0; background: rgba(20,24,20,0.45); display: none; align-items: flex-start; justify-content: center; padding: 8vh 16px; z-index: 20; overflow-y:auto; }
+  .overlay[data-open="true"] { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--ink); border-radius: 6px; width: 100%; max-width: 420px; padding: 24px; }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 21px; margin: 0 0 4px; font-weight: 600; }
+  .modal .sub { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--ink); }
+  .field input:focus, .field select:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+  .form-error { font-size: 12.5px; color: var(--brick); margin-top: 10px; display: none; }
+  .modal-actions { display:flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  @media (max-width: 640px) {
+    .hero { align-items: flex-start; } .stat-block { text-align: left; } .stat-sub { justify-content: flex-start; }
+    thead th:nth-child(2), tbody td:nth-child(2) { display: none; }
+    .wrap { padding: 20px 14px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div>
+      <div class="brand"><span class="mark">Poke<em>Stock</em></span></div>
+      <div class="tag">Joonan korttivaraston hallinta</div>
+      <div class="conn" id="connStatus"><span class="dot"></span><span id="connLabel">Yhdistetään rajapintaan…</span></div>
+    </div>
+    <div class="stat-block">
+      <div class="value" id="totalValue">—</div>
+      <div class="label">kokoelman arvo, myymättä olevat</div>
+      <div class="stat-sub"><span><b id="totalCount">0</b> korttia</span><span><b id="soldCount">0</b> myyty</span></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search" id="searchInput" type="text" placeholder="Hae kortin nimellä tai numerolla…">
+    <button class="btn secondary" id="refreshBtn" type="button">↻ Päivitä</button>
+    <button class="btn" id="addBtn" type="button">+ Lisää kortti</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="panel">
+    <table id="cardTable" style="display:none;">
+      <thead>
+        <tr>
+          <th data-sort="nimi">Kortti <span class="arrow" data-arrow="nimi"></span></th>
+          <th data-sort="kategoria">Kategoria <span class="arrow" data-arrow="kategoria"></span></th>
+          <th data-sort="kunto">Kunto <span class="arrow" data-arrow="kunto"></span></th>
+          <th class="num" data-sort="arvo">Arvo <span class="arrow" data-arrow="arvo"></span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="loading" id="loadingState">Ladataan kortteja…</div>
+    <div class="empty" id="emptyState" style="display:none;">Ei kortteja tällä haulla.</div>
+    <div class="error-state" id="errorState" style="display:none;"></div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Lisää kortti</h2>
+    <p class="sub">Kortti tallentuu suoraan tietokantaan.</p>
+    <form id="addForm">
+      <div class="field"><label for="f_nimi">Kortin nimi</label><input id="f_nimi" required placeholder="esim. Charizard VMAX"></div>
+      <div class="field"><label for="f_numero">Numero</label><input id="f_numero" placeholder="esim. 020/189"></div>
+      <div class="field">
+        <label for="f_kategoria">Kategoria</label>
+        <select id="f_kategoria">
+          <option>Kiilto</option><option>Tähti</option><option>Trainer</option><option>Erikois</option>
+          <option>Vanhat</option><option>Pienet sarjat</option><option>Bulk</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f_kunto">Kunto</label>
+        <select id="f_kunto"><option>NM/M</option><option>EX</option><option>LP</option><option>PL</option><option>DMG</option></select>
+      </div>
+      <div class="field"><label for="f_arvo">Arvo (€)</label><input id="f_arvo" type="number" step="0.01" min="0" required placeholder="0.00"></div>
+      <div class="form-error" id="formError"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelBtn">Peruuta</button>
+        <button type="submit" class="btn" id="submitBtn">Lisää varastoon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const API = '/api/cards';
+
+let allCards = [];
+let activeCategory = 'Kaikki';
+let searchTerm = '';
+let sortKey = 'arvo';
+let sortDir = -1;
+let searchDebounce = null;
+
+const CATS = ['Kaikki','Kiilto','Tähti','Trainer','Erikois','Vanhat','Pienet sarjat','Bulk'];
+const eur = n => Number(n).toLocaleString('fi-FI', {style:'currency', currency:'EUR'});
+const escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+function setConn(ok, label) {
+  const el = document.getElementById('connStatus');
+  el.setAttribute('data-ok', String(ok));
+  document.getElementById('connLabel').textContent = label;
+}
+
+async function apiRequest(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    const msg = body?.virhe || `Virhe (${res.status})`;
+    throw new Error(msg);
+  }
+  return body;
+}
+
+async function loadCards() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('cardTable').style.display = 'none';
+  try {
+    allCards = await apiRequest(API);
+    setConn(true, 'Yhdistetty');
+    renderAll();
+  } catch (err) {
+    setConn(false, 'Ei yhteyttä rajapintaan');
+    document.getElementById('loadingState').style.display = 'none';
+    const es = document.getElementById('errorState');
+    es.style.display = 'block';
+    es.textContent = 'Korttien lataus epäonnistui: ' + err.message + ' — tarkista, että API-palvelin on käynnissä.';
+  }
+}
+
+function renderAll() { renderTabs(); renderTable(); renderStats(); }
+
+function renderTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  CATS.forEach(cat => {
+    const count = cat === 'Kaikki' ? allCards.length : allCards.filter(c => c.kategoria === cat).length;
+    const el = document.createElement('div');
+    el.className = 'tab';
+    el.setAttribute('data-active', String(cat === activeCategory));
+    el.innerHTML = `${cat}<span class="n">${count}</span>`;
+    el.addEventListener('click', () => { activeCategory = cat; renderTable(); renderTabs(); });
+    tabsEl.appendChild(el);
+  });
+}
+
+function getFiltered() {
+  let list = allCards.slice();
+  if (activeCategory !== 'Kaikki') list = list.filter(c => c.kategoria === activeCategory);
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
+    list = list.filter(c => c.nimi.toLowerCase().includes(q) || (c.numero||'').toLowerCase().includes(q));
+  }
+  list.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv||'').toLowerCase(); }
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+  return list;
+}
+
+function renderTable() {
+  const list = getFiltered();
+  const table = document.getElementById('cardTable');
+  const tbody = document.getElementById('tbody');
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+
+  if (!list.length) {
+    table.style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  table.style.display = '';
+  document.getElementById('emptyState').style.display = 'none';
+  tbody.innerHTML = '';
+
+  document.querySelectorAll('[data-arrow]').forEach(a => a.textContent = '');
+  const arrowEl = document.querySelector(`[data-arrow="${sortKey}"]`);
+  if (arrowEl) arrowEl.textContent = sortDir === 1 ? '▲' : '▼';
+
+  list.forEach(c => {
+    const isSold = !!c.myyty?.tila;
+    const tr = document.createElement('tr');
+    if (isSold) tr.className = 'sold';
+    tr.innerHTML = `
+      <td><div class="nimi">${escapeHtml(c.nimi)}</div><div class="num-cell">${escapeHtml(c.numero||'')}</div></td>
+      <td><span class="chip">${escapeHtml(c.kategoria)}</span></td>
+      <td>${escapeHtml(c.kunto||'—')}</td>
+      <td class="arvo">${eur(c.arvo)}</td>
+      <td class="row-actions">
+        <button class="icon-btn sold-btn" data-sold="${isSold}" data-id="${c._id}">${isSold ? 'Myyty' : 'Merkitse myydyksi'}</button>
+        <button class="icon-btn del-btn" data-id="${c._id}">Poista</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.sold-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      const nowSold = btn.getAttribute('data-sold') === 'true';
+      btn.disabled = true;
+      try {
+        const updated = await apiRequest(`${API}/${id}/myyty`, {
+          method: 'PATCH',
+          body: JSON.stringify({ tila: !nowSold }),
+        });
+        const idx = allCards.findIndex(c => c._id === id);
+        if (idx >= 0) allCards[idx] = updated;
+        renderAll();
+      } catch (err) {
+        alert('Myyntitilan päivitys epäonnistui: ' + err.message);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      if (!confirm('Poistetaanko kortti pysyvästi?')) return;
+      btn.disabled = true;
+      try {
+        await apiRequest(`${API}/${id}`, { method: 'DELETE' });
+        allCards = allCards.filter(c => c._id !== id);
+        renderAll();
+      } catch (err) {
+        alert('Poisto epäonnistui: ' + err.message);
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+function renderStats() {
+  const unsold = allCards.filter(c => !c.myyty?.tila);
+  const total = unsold.reduce((s,c) => s + c.arvo, 0);
+  document.getElementById('totalValue').textContent = eur(total);
+  document.getElementById('totalCount').textContent = allCards.length;
+  document.getElementById('soldCount').textContent = allCards.length - unsold.length;
+}
+
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.getAttribute('data-sort');
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = key === 'arvo' ? -1 : 1; }
+    renderTable();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(renderTable, 120);
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadCards);
+
+const overlay = document.getElementById('overlay');
+document.getElementById('addBtn').addEventListener('click', () => overlay.setAttribute('data-open','true'));
+document.getElementById('cancelBtn').addEventListener('click', () => overlay.setAttribute('data-open','false'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.setAttribute('data-open','false'); });
+
+document.getElementById('addForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errEl = document.getElementById('formError');
+  errEl.style.display = 'none';
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  const payload = {
+    nimi: document.getElementById('f_nimi').value.trim(),
+    numero: document.getElementById('f_numero').value.trim(),
+    kategoria: document.getElementById('f_kategoria').value,
+    kunto: document.getElementById('f_kunto').value,
+    arvo: parseFloat(document.getElementById('f_arvo').value) || 0,
+  };
+  try {
+    const created = await apiRequest(API, { method: 'POST', body: JSON.stringify(payload) });
+    allCards.push(created);
+    e.target.reset();
+    overlay.setAttribute('data-open','false');
+    renderAll();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+loadCards();
+</script>
+</body>
+</html>
