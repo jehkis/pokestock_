@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed": "node seed/seed.js",
-    "seed:poromagia": "node seed/seed-poromagia.js"
+    "seed": "node seed/seed.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -54,16 +54,11 @@ api/
 | PUT    | /api/cards/:id             | Muokkaa korttia                         |
 | PATCH  | /api/cards/:id/myyty        | Merkitse myydyksi / palauta myymättömäksi |
 | DELETE | /api/cards/:id             | Poista kortti                           |
-| GET    | /api/hinta-haku?nimi=X&numero=Y | Hakee hinnan Poromagian 36 600 rivin viitehinnastosta |
 
-Hintahaku-esimerkki:
+Esimerkki (POST):
+```json
+{ "nimi": "Charizard VMAX", "numero": "020/189", "kategoria": "Kiilto", "kunto": "NM/M", "arvo": 45.00 }
 ```
-GET /api/hinta-haku?nimi=Charizard%20EX&numero=12/108
-→ { "loytyi": true, "paras": { "kortti_nimi": "...", "hinta_eur": 9.50, ... }, "ehdotukset": [...] }
-```
-UI:n "Lisää kortti" -lomakkeessa on nappi "Hae Poromagialta", joka täyttää
-Arvo-kentän automaattisesti tämän haun perusteella — voit silti muokata
-hintaa käsin ennen tallennusta.
 
 ## Käyttöönotto
 
@@ -77,7 +72,6 @@ docker compose up --build
 Kun molemmat kontit ovat käynnissä, aja kannan alustus kerran:
 ```bash
 docker compose exec api npm run seed              # 265 omaa korttia
-docker compose exec api npm run seed:poromagia     # Poromagian 36 600 rivin viitehinnasto (kestää hetken)
 ```
 
 Avaa selaimessa: **http://localhost:3000**
@@ -89,7 +83,6 @@ cd api
 npm install
 cp .env.example .env      # muokkaa MONGO_URI tarvittaessa
 npm run seed               # alustaa 265 kortilla
-npm run seed:poromagia     # Poromagian viitehinnasto (36 600 riviä)
 npm start
 ```
 

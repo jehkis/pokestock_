@@ -4,7 +4,6 @@ const path = require('path');
 const cors = require('cors');
 const { connectDB } = require('./src/db');
 const cardsRouter = require('./src/routes/cards');
-const hintahakuRouter = require('./src/routes/hintahaku');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,7 +14,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'pokestock-api' }));
 app.use('/api/cards', cardsRouter);
-app.use('/api/hinta-haku', hintahakuRouter);
 
 app.use('/api', (req, res) => res.status(404).json({ virhe: 'Reittiä ei löytynyt' }));
 
