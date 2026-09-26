@@ -6,7 +6,7 @@ Tämän kurssityön suunnittelussa ja toteutuksessa on hyödynnetty Anthropicin 
 
 2. **Tietokantaskeeman (pokestock_schema.sql) suunnittelu** — taulurakenteet (Kategoria, Kortti, Myynti), tietotyyppien valinta, primääri- ja viiteavaimet sekä indeksit määriteltiin tekoälyn avustuksella tehtävänannon vaatimusten mukaisesti.
 
-3. **Esimerkkidatan (pokestock_esimerkkidata.sql) kerääminen ja jalostaminen** — tekoäly tunnisti 229 Pokémon-korttia valokuvista (Google Drive), haki niille markkinahintoja verkosta ja täsmäytti hintoja Poromagia-verkkokaupan (poromagia.com) todelliseen hintalistaan. Tunnistus- ja hinnoitteluprosessi eteni useassa vaiheessa, ja lopputulos vietiin SQL-muotoon INSERT-lauseiksi.
+3. **Esimerkkidatan (pokestock_esimerkkidata.sql) kerääminen ja jalostaminen** — tekoäly tunnisti 265 Pokémon-korttia valokuvista (Google Drive), haki niille markkinahintoja verkosta ja täsmäytti hintoja yleiseen markkinahintaviitteeseen. Tunnistus- ja hinnoitteluprosessi eteni useassa vaiheessa, ja lopputulos vietiin SQL-muotoon INSERT-lauseiksi.
 
 4. **Skriptien ajaminen ja testaus** — pokestock_schema.sql ja pokestock_esimerkkidata.sql on ajettu ja validoitu toimiviksi MariaDB-tietokantaa vasten (229 riviä Kortti-tauluun, viiteavainsuhteet toimivat, tarkistuskyselyt tuottavat oikean tuloksen).
 

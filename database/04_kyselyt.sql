@@ -1,7 +1,6 @@
 -- =====================================================
 -- PokeStock -- taulujen avaus / katselukyselyt
--- Aja pokestock_schema.sql, poromagia_hinnasto_import.sql
--- ja pokestock_esimerkkidata.sql ensin.
+-- Aja pokestock_schema.sql ja pokestock_esimerkkidata.sql ensin.
 -- =====================================================
 
 USE pokestock;
@@ -16,7 +15,6 @@ SELECT * FROM Kortti;
 
 SELECT * FROM Myynti;
 
-SELECT * FROM Poromagia_Hinnasto LIMIT 100;
 
 -- ---------------------------------------------------
 -- 2. Kortit arvokkaimmasta halvimpaan
@@ -64,22 +62,3 @@ SELECT k.nimi, m.hinta, m.ostaja, m.myyty_pvm
 FROM Myynti m
 JOIN Kortti k ON m.kortti_id = k.id
 WHERE m.myyty = TRUE;
-
--- ---------------------------------------------------
--- 7. Poromagia-viitehinta samalle kortille (nimen perusteella)
---    Esimerkki: nayttaa oman kortin arvon vs. Poromagian pyyntihinnan
--- ---------------------------------------------------
-
--- Kortin numero on aina nimen viimeinen sana (esim. "Gardevoir & Sylveon-GX 205/214" -> "205/214")
-SELECT
-    k.nimi                AS oma_kortti,
-    k.arvo                AS oma_arvo,
-    p.kortti_nimi         AS poromagia_kortti,
-    p.hinta_eur           AS poromagia_hinta,
-    p.varastossa_kpl
-FROM Kortti k
-LEFT JOIN Poromagia_Hinnasto p
-    ON p.kortti_nimi LIKE CONCAT('% ', SUBSTRING_INDEX(k.nimi, ' ', -1), ' %')
-    AND p.kortti_nimi NOT LIKE '%Reverse Holo%'
-ORDER BY k.arvo DESC
-LIMIT 30;

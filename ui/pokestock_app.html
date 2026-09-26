@@ -164,6 +164,8 @@
   }
   .icon-btn:hover { border-color: var(--teal); color: var(--teal); }
   .icon-btn.sold-btn[data-sold="true"] { color: var(--brick); border-color: var(--brick); background: var(--brick-bg); }
+  .icon-btn.del-btn { margin-left: 6px; }
+  .icon-btn.del-btn:hover { border-color: var(--brick); color: var(--brick); }
   .empty { padding: 46px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
 
   /* ---- Modal (Lisaa kortti) ---- */
@@ -392,6 +394,7 @@ function renderTable() {
       <td class="arvo">${eur(c.arvo)}</td>
       <td class="row-actions">
         <button class="icon-btn sold-btn" data-sold="${isSold}" data-id="${c.id}">${isSold ? 'Myyty' : 'Merkitse myydyksi'}</button>
+        <button class="icon-btn del-btn" data-id="${c.id}">Poista</button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -400,6 +403,18 @@ function renderTable() {
     btn.addEventListener('click', () => {
       const id = Number(btn.getAttribute('data-id'));
       if (sold.has(id)) sold.delete(id); else sold.add(id);
+      saveSold(sold);
+      render();
+    });
+  });
+
+  tbody.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.getAttribute('data-id'));
+      if (!confirm('Poistetaanko kortti pysyvästi?')) return;
+      cards = cards.filter(c => c.id !== id);
+      sold.delete(id);
+      saveCards(cards);
       saveSold(sold);
       render();
     });

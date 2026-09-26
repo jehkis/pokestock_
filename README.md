@@ -9,7 +9,6 @@ esimerkkidata, jotka pohjautuvat oikeaan korttikokoelmaan.
 ```
 database/     SQL-skriptit, aja jarjestyksessa 01 -> 04
   01_schema.sql                    Taulut: Kategoria, Kortti, Myynti
-  02_poromagia_hinnasto_import.sql Viitehintataulu (Poromagia.com, ~36 600 riv.)
   03_esimerkkidata.sql             265 oikeaa korttia + 1 myyntiesimerkki
   04_kyselyt.sql                   Valmiit tarkistus-/kayttokyselyt
 
@@ -22,6 +21,8 @@ data/
   hinnasto_muut.csv                 Kuvista tunnistetut kortit + hinta-arviot
   hinnasto_base_set.csv             Viitehinnasto: koko 1999 Base Set
   hinnasto_sm_unbroken_bonds.csv    Viitehinnasto: koko SM Unbroken Bonds -setti
+  markkinahinnasto.csv               Yleinen markkinahintaviite, ~36 600 riviä
+  oma_kokoelma_vs_markkinahinta.csv  Oman kokoelman hintavertailu markkinahintoihin (94/265 korttia)
 
 esitys/
   PokeStock.pptx / .pdf       Kurssin Tehtava 1 -esitys
@@ -38,7 +39,6 @@ fullstack/
 
 ```bash
 mysql -u root < database/01_schema.sql
-mysql -u root < database/02_poromagia_hinnasto_import.sql
 mysql -u root < database/03_esimerkkidata.sql
 mysql -u root < database/04_kyselyt.sql
 ```
@@ -57,5 +57,5 @@ tietokantaan.
 ## Data-alkupera
 
 Kortit tunnistettiin Google Drive -kansiosta (kuvat) tekoalyavusteisesti,
-hinnoiteltiin verkkohauilla ja tasmatettiin Poromagian
-(poromagia.com) oikeaan hintalistaan. Katso dokumentaatio/AI_kaytto_raporttiin.md.
+hinnoiteltiin verkkohauilla ja tasmatettiin yleiseen markkinahintaviitteeseen.
+Katso dokumentaatio/AI_kaytto_raporttiin.md.
