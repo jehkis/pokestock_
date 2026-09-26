@@ -1,4 +1,4 @@
-// Tayttaa MongoDB:n Joonan oikealla korttikokoelmalla (229 korttia).
+// Tayttaa MongoDB:n Joonan oikealla korttikokoelmalla (265 korttia).
 // Aja: npm run seed  (tai: node seed/seed.js)
 require('dotenv').config();
 const fs = require('fs');
