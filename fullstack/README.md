@@ -54,11 +54,16 @@ api/
 | PUT    | /api/cards/:id             | Muokkaa korttia                         |
 | PATCH  | /api/cards/:id/myyty        | Merkitse myydyksi / palauta myymättömäksi |
 | DELETE | /api/cards/:id             | Poista kortti                           |
+| GET    | /api/hinta-haku?nimi=X&numero=Y | Hakee hinta-arvion yleisestä markkinahintaviitteestä (~36 600 riviä) |
 
-Esimerkki (POST):
-```json
-{ "nimi": "Charizard VMAX", "numero": "020/189", "kategoria": "Kiilto", "kunto": "NM/M", "arvo": 45.00 }
+Hintahaku-esimerkki:
 ```
+GET /api/hinta-haku?nimi=Charizard%20EX&numero=12/108
+→ { "loytyi": true, "paras": { "kortti_nimi": "...", "hinta_eur": 9.50, ... }, "ehdotukset": [...] }
+```
+UI:n "Lisää kortti" -lomakkeessa on nappi "Hae hinta-arvio", joka täyttää
+Arvo-kentän automaattisesti tämän haun perusteella — voit silti muokata
+hintaa käsin ennen tallennusta.
 
 ## Käyttöönotto
 
@@ -72,6 +77,7 @@ docker compose up --build
 Kun molemmat kontit ovat käynnissä, aja kannan alustus kerran:
 ```bash
 docker compose exec api npm run seed              # 265 omaa korttia
+docker compose exec api npm run seed:hinnat        # yleinen markkinahintaviite (kestää hetken)
 ```
 
 Avaa selaimessa: **http://localhost:3000**
@@ -83,6 +89,7 @@ cd api
 npm install
 cp .env.example .env      # muokkaa MONGO_URI tarvittaessa
 npm run seed               # alustaa 265 kortilla
+npm run seed:hinnat        # yleinen markkinahintaviite (36 600 riviä)
 npm start
 ```
 
