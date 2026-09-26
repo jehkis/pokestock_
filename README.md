@@ -10,7 +10,7 @@ esimerkkidata, jotka pohjautuvat oikeaan korttikokoelmaan.
 database/     SQL-skriptit, aja jarjestyksessa 01 -> 04
   01_schema.sql                    Taulut: Kategoria, Kortti, Myynti
   02_poromagia_hinnasto_import.sql Viitehintataulu (Poromagia.com, ~36 600 riv.)
-  03_esimerkkidata.sql             229 oikeaa korttia + 1 myyntiesimerkki
+  03_esimerkkidata.sql             265 oikeaa korttia + 1 myyntiesimerkki
   04_kyselyt.sql                   Valmiit tarkistus-/kayttokyselyt
 
 ui/
@@ -18,7 +18,7 @@ ui/
                                kategoriasuodatus, lisays, myyty-merkinta)
 
 data/
-  kortti_master.csv                 229 korttia: nimi, numero, kategoria, arvo (EUR)
+  kortti_master.csv                 265 korttia: nimi, numero, kategoria, arvo (EUR)
   hinnasto_muut.csv                 Kuvista tunnistetut kortit + hinta-arviot
   hinnasto_base_set.csv             Viitehinnasto: koko 1999 Base Set
   hinnasto_sm_unbroken_bonds.csv    Viitehinnasto: koko SM Unbroken Bonds -setti
@@ -44,7 +44,7 @@ mysql -u root < database/04_kyselyt.sql
 ```
 
 Kaikki nelja skriptia on ajettu ja validoitu paikallista MariaDB-instanssia
-vastaan (229 riviä Kortti-tauluun, FK-relaatiot toimivat, tarkistuskyselyt
+vastaan (265 riviä Kortti-tauluun, FK-relaatiot toimivat, tarkistuskyselyt
 palauttavat oikean tuloksen).
 
 ## UI
