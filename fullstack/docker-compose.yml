@@ -19,6 +19,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - ./api/.env
     environment:
       - MONGO_URI=mongodb://mongo:27017/pokestock
       - PORT=3000

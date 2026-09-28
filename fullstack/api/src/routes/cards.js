@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Card = require('../models/Card');
+const { requireAdmin } = require('../middleware/adminAuth');
 
 const router = express.Router();
 
@@ -85,8 +86,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/cards
-router.post('/', async (req, res) => {
+// POST /api/cards  (YLLAPITO)
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const { nimi, numero, kategoria, kunto, arvo } = req.body;
     const card = new Card({ nimi, numero, kategoria, kunto, arvo });
@@ -100,8 +101,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/cards/:id  -- korvaa muokattavat kentät
-router.put('/:id', async (req, res) => {
+// PUT /api/cards/:id  (YLLAPITO) -- korvaa muokattavat kentat
+router.put('/:id', requireAdmin, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ virhe: 'Virheellinen id' });
   try {
     const { nimi, numero, kategoria, kunto, arvo } = req.body;
@@ -120,8 +121,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/cards/:id/myyty  -- merkitse myydyksi / palauta myymättömäksi
-router.patch('/:id/myyty', async (req, res) => {
+// PATCH /api/cards/:id/myyty  (YLLAPITO) -- merkitse myydyksi / palauta myymattomaksi
+router.patch('/:id/myyty', requireAdmin, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ virhe: 'Virheellinen id' });
   try {
     const { tila, hinta, ostaja } = req.body;
@@ -139,8 +140,8 @@ router.patch('/:id/myyty', async (req, res) => {
   }
 });
 
-// DELETE /api/cards/:id
-router.delete('/:id', async (req, res) => {
+// DELETE /api/cards/:id  (YLLAPITO)
+router.delete('/:id', requireAdmin, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ virhe: 'Virheellinen id' });
   try {
     const card = await Card.findByIdAndDelete(req.params.id);

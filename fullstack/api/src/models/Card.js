@@ -37,6 +37,10 @@ const cardSchema = new mongoose.Schema({
     hinta: { type: Number, default: null },
     ostaja: { type: String, default: '' },
   },
+  tarjottu: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: { createdAt: 'lisatty', updatedAt: 'paivitetty' },
 });
