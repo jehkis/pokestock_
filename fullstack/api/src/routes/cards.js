@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Card = require('../models/Card');
 const { requireAdmin } = require('../middleware/adminAuth');
+const { haeHinta } = require('../services/tcgdex');
 
 const router = express.Router();
 
@@ -98,6 +99,51 @@ router.post('/', requireAdmin, async (req, res) => {
       return res.status(400).json({ virhe: 'Virheellinen data', details: err.message });
     }
     res.status(500).json({ virhe: 'Kortin lisäys epäonnistui', details: err.message });
+  }
+});
+
+// TCGdexin Cardmarket-tuoteliitokset ovat toisinaan virheellisia/vanhentuneita,
+// jolloin haettu hinta voi olla moninkertaisesti liian pieni. Jos uusi hinta on
+// alle 30% vanhasta (eika vanha ollut jo mitaton), sita ei ylikirjoiteta
+// automaattisesti vaan se jaa ylläpitäjän tarkistettavaksi.
+const EPAILYTTAVAN_PUDOTUKSEN_RAJA = 0.3;
+const PIENIN_TARKISTETTAVA_VANHA_ARVO = 2;
+
+// POST /api/cards/paivita-hinnat  (YLLAPITO) -- hakee jokaiselle kortille
+// tuoreen Cardmarket-hinnan TCGdexista ja tallentaa sen arvo-kenttaan.
+// Kategoria "Kiilto" haetaan holo-hintana, muut normaalina.
+router.post('/paivita-hinnat', requireAdmin, async (req, res) => {
+  try {
+    const cards = await Card.find({});
+    const tulos = { paivitetty: 0, ei_loytynyt: [], tarkista: [], virhe: [] };
+
+    for (const card of cards) {
+      try {
+        const haku = await haeHinta({ nimi: card.nimi, numero: card.numero, holo: card.kategoria === 'Kiilto' });
+        const arvo = haku.loytyi ? haku.paras.hinta?.arvo : null;
+        if (arvo === null || arvo === undefined) {
+          tulos.ei_loytynyt.push({ id: card._id, nimi: card.nimi, numero: card.numero });
+          continue;
+        }
+
+        const vanhaArvo = card.arvo;
+        const epailyttava = vanhaArvo >= PIENIN_TARKISTETTAVA_VANHA_ARVO && arvo <= vanhaArvo * EPAILYTTAVAN_PUDOTUKSEN_RAJA;
+        if (epailyttava) {
+          tulos.tarkista.push({ id: card._id, nimi: card.nimi, numero: card.numero, vanha: vanhaArvo, uusi: arvo });
+          continue;
+        }
+
+        card.arvo = arvo;
+        await card.save();
+        tulos.paivitetty += 1;
+      } catch (err) {
+        tulos.virhe.push({ id: card._id, nimi: card.nimi, virhe: err.message });
+      }
+    }
+
+    res.json(tulos);
+  } catch (err) {
+    res.status(500).json({ virhe: 'Hintojen paivitys epaonnistui', details: err.message });
   }
 });
 

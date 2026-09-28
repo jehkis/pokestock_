@@ -128,6 +128,7 @@
   <div class="toolbar">
     <input class="search" id="searchInput" type="text" placeholder="Hae kortin nimellä tai numerolla…">
     <button class="btn secondary" id="refreshBtn" type="button">↻ Päivitä</button>
+    <button class="btn secondary" id="paivitaHinnatBtn" type="button">💲 Päivitä kaikki hinnat</button>
     <button class="btn" id="addBtn" type="button">+ Lisää kortti</button>
   </div>
 
@@ -387,6 +388,28 @@ document.getElementById('searchInput').addEventListener('input', e => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', loadCards);
+
+document.getElementById('paivitaHinnatBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('paivitaHinnatBtn');
+  if (!confirm(`Haetaan tuore hinta jokaiselle ${allCards.length} kortille TCGdexista. Tama voi kestaa muutaman minuutin. Jatketaanko?`)) return;
+
+  btn.disabled = true;
+  btn.textContent = '💲 Päivitetään… (voi kestää muutaman minuutin)';
+  try {
+    const tulos = await apiRequest(`${API}/paivita-hinnat`, { method: 'POST' });
+    await loadCards();
+    let viesti = `Hinnat päivitetty: ${tulos.paivitetty}/${allCards.length} korttia.`;
+    if (tulos.tarkista?.length) viesti += `\n\nEpäilyttävä hintapudotus, EI päivitetty automaattisesti (${tulos.tarkista.length}):\n` + tulos.tarkista.map(k => `${k.nimi} #${k.numero}: ${eur(k.vanha)} → ${eur(k.uusi)}?`).join('\n');
+    if (tulos.ei_loytynyt?.length) viesti += `\n\nEi löytynyt hintaa (${tulos.ei_loytynyt.length}): ` + tulos.ei_loytynyt.map(k => `${k.nimi} #${k.numero}`).join(', ');
+    if (tulos.virhe?.length) viesti += `\n\nVirheitä (${tulos.virhe.length}): ` + tulos.virhe.map(k => k.nimi).join(', ');
+    alert(viesti);
+  } catch (err) {
+    alert('Hintojen päivitys epäonnistui: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💲 Päivitä kaikki hinnat';
+  }
+});
 
 const overlay = document.getElementById('overlay');
 document.getElementById('addBtn').addEventListener('click', () => {
