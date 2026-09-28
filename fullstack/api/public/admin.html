@@ -205,6 +205,7 @@ let searchDebounce = null;
 const CATS = ['Kaikki','Kiilto','Tähti','Trainer','Erikois','Vanhat','Pienet sarjat','Bulk'];
 const eur = n => Number(n).toLocaleString('fi-FI', {style:'currency', currency:'EUR'});
 const escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const cardmarketUrl = nimi => `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(nimi)}`;
 
 function setConn(ok, label) {
   const el = document.getElementById('connStatus');
@@ -322,6 +323,7 @@ function renderTable() {
       <td>${escapeHtml(c.kunto||'—')}</td>
       <td class="arvo">${eur(c.arvo)}</td>
       <td class="row-actions">
+        <a class="icon-btn" href="${cardmarketUrl(c.nimi)}" target="_blank" rel="noopener noreferrer">Cardmarket ↗</a>
         <button class="icon-btn sold-btn" data-sold="${isSold}" data-id="${c._id}">${isSold ? 'Myyty' : 'Merkitse myydyksi'}</button>
         <button class="icon-btn del-btn" data-id="${c._id}">Poista</button>
       </td>`;
