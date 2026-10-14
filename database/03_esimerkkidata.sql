@@ -283,6 +283,38 @@ INSERT INTO Kortti (nimi, kategoria_id, kunto, arvo, lisatty_pvm, lisatty_aika) 
     ('Gastly 47/108', 5, 'NM', 0.05, '2026-09-26', '12:24:00'),
     ('Gastly 47/108', 5, 'NM', 0.05, '2026-09-26', '12:25:00');
 
--- Esimerkki: yksi kortti merkitty myydyksi
-INSERT INTO Myynti (kortti_id, myyty_pvm, hinta, ostaja, myyty) VALUES
-    (17, '2026-09-25', 15.00, 'Matti M.', TRUE);
+INSERT INTO Asiakas (nimi, sahkoposti, kaupunki) VALUES
+    ('Matti Meikäläinen', 'matti.m@example.com', 'Helsinki'),
+    ('Liisa Virtanen', 'liisa.virtanen@example.com', 'Espoo'),
+    ('Pekka Korhonen', 'pekka.k@example.com', 'Tampere'),
+    ('Aino Nieminen', 'aino.nieminen@example.com', 'Helsinki'),
+    ('Jari Mäkinen', NULL, 'Turku');
+
+INSERT INTO Myyntikanava (nimi, provisio_prosentti) VALUES
+    ('Tori.fi', 0.00),
+    ('Cardmarket', 5.00),
+    ('Facebook Marketplace', 0.00),
+    ('Korttikauppa (vaihto)', 10.00);
+
+-- Myyntitapahtumat: 8 toteutunutta myyntiä ja 2 varausta (myyty = FALSE)
+INSERT INTO Myynti (kortti_id, asiakas_id, kanava_id, myyty_pvm, hinta, myyty) VALUES
+    (17, 1, 1, '2026-09-25', 15.00, TRUE),
+    (2,  2, 2, '2026-09-28', 82.00, TRUE),
+    (9,  2, 2, '2026-09-30', 30.00, TRUE),
+    (8,  3, 3, '2026-10-01', 35.00, TRUE),
+    (14, 4, 1, '2026-10-02', 20.00, TRUE),
+    (21, 1, 1, '2026-10-04', 12.00, TRUE),
+    (12, 3, 4, '2026-10-05', 22.00, TRUE),
+    (6,  2, 2, '2026-10-07', 40.00, TRUE),
+    (1,  4, 3, NULL, 95.00, FALSE),
+    (11, 1, 1, NULL, 25.00, FALSE);
+
+-- Tarjoukset: 3 odottavaa, 2 hyväksyttyä ja 2 hylättyä
+INSERT INTO Tarjous (kortti_id, ostajan_nimi, ostajan_sahkoposti, tarjottu_hinta, tila, lisatty_pvm, lisatty_aika) VALUES
+    (3,  'Emma Virtanen',  'emma.v@example.com',      60.00, 'odottaa',    '2026-10-08', '18:12:00'),
+    (5,  'Ville Laine',    'ville.laine@example.com', 45.00, 'hylätty',    '2026-10-08', '20:40:00'),
+    (5,  'Sara Koskinen',  'sara.k@example.com',      52.00, 'hyväksytty', '2026-10-09', '09:05:00'),
+    (7,  'Emma Virtanen',  'emma.v@example.com',      35.00, 'odottaa',    '2026-10-10', '16:30:00'),
+    (10, 'Oskari Heikkinen','oskari.h@example.com',   25.00, 'hylätty',    '2026-10-11', '12:00:00'),
+    (13, 'Ville Laine',    'ville.laine@example.com', 22.00, 'hyväksytty', '2026-10-12', '14:45:00'),
+    (16, 'Sara Koskinen',  'sara.k@example.com',      14.00, 'odottaa',    '2026-10-13', '19:20:00');

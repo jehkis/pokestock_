@@ -6,3 +6,4 @@ Thumbs.db
 # Local DB artifacts, if you run MySQL/MariaDB locally in this repo
 *.sql~
 mysql-data/
+/video/*.mp4

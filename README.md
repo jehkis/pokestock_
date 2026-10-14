@@ -8,9 +8,12 @@ esimerkkidata, jotka pohjautuvat oikeaan korttikokoelmaan.
 
 ```
 database/     SQL-skriptit, aja jarjestyksessa 01 -> 04
-  01_schema.sql                    Taulut: Kategoria, Kortti, Myynti
-  03_esimerkkidata.sql             265 oikeaa korttia + 1 myyntiesimerkki
-  04_kyselyt.sql                   Valmiit tarkistus-/kayttokyselyt
+  01_schema.sql                    Taulut: Kategoria, Kortti, Asiakas, Myyntikanava, Myynti, Tarjous
+  03_esimerkkidata.sql             265 oikeaa korttia, 5 asiakasta, 4 kanavaa, 10 myyntia, 7 tarjousta
+  04_kyselyt.sql                   Tehtava 4: 10 SELECT-kyselya
+  05_varmuuskopio_ja_palautus.md   Tehtava 5 (dump + palautus) ja videon runko
+
+palautus/     Canvas-palautus: tehtava3 (= 01 + 03 yhdessa) ja tehtava4 (= 04)
 
 ui/
   pokestock_app.html          Itsenainen selainsovellus (korttilista, haku,
@@ -43,8 +46,8 @@ mysql -u root < database/03_esimerkkidata.sql
 mysql -u root < database/04_kyselyt.sql
 ```
 
-Kaikki nelja skriptia on ajettu ja validoitu paikallista MariaDB-instanssia
-vastaan (265 riviä Kortti-tauluun, FK-relaatiot toimivat, tarkistuskyselyt
+Kaikki skriptit on ajettu ja validoitu paikallista MariaDB-instanssia
+vastaan (MySQL 26.7: 265 riviä Kortti-tauluun, FK-relaatiot toimivat, dump palautuu uuteen kantaan, tarkistuskyselyt
 palauttavat oikean tuloksen).
 
 ## UI

@@ -1,0 +1,434 @@
+-- =====================================================
+-- PokeStock — tietokannan luontiskripti (MySQL)
+-- Taulut: Kategoria, Kortti, Asiakas, Myyntikanava, Myynti, Tarjous
+-- =====================================================
+
+DROP DATABASE IF EXISTS pokestock;
+CREATE DATABASE pokestock
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE pokestock;
+
+-- ---------------------------------------------------
+-- Taulu: Kategoria
+-- Kortin luokka, esim. Kiilto, Tähti, Trainer, Bulk...
+-- ---------------------------------------------------
+CREATE TABLE Kategoria (
+    id      INT AUTO_INCREMENT PRIMARY KEY,
+    nimi    VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- ---------------------------------------------------
+-- Taulu: Kortti
+-- Yksittäinen myyntiin tarkoitettu kortti
+-- ---------------------------------------------------
+CREATE TABLE Kortti (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    nimi            VARCHAR(100) NOT NULL,
+    kategoria_id    INT NOT NULL,
+    kunto           VARCHAR(20),
+    arvo            DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    lisatty_pvm     DATE NOT NULL,
+    lisatty_aika    TIME NOT NULL,
+    CONSTRAINT fk_kortti_kategoria
+        FOREIGN KEY (kategoria_id) REFERENCES Kategoria(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- ---------------------------------------------------
+-- Taulu: Asiakas
+-- Kortin ostaja (tai ostoa tiedustellut henkilö)
+-- ---------------------------------------------------
+CREATE TABLE Asiakas (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    nimi        VARCHAR(100) NOT NULL,
+    sahkoposti  VARCHAR(150) UNIQUE,
+    kaupunki    VARCHAR(50)
+);
+
+-- ---------------------------------------------------
+-- Taulu: Myyntikanava
+-- Missä kortti myytiin, esim. Tori.fi tai Cardmarket
+-- ---------------------------------------------------
+CREATE TABLE Myyntikanava (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    nimi                VARCHAR(50) NOT NULL UNIQUE,
+    provisio_prosentti  DECIMAL(4,2) NOT NULL DEFAULT 0.00
+);
+
+-- ---------------------------------------------------
+-- Taulu: Myynti
+-- Toteutunut (myyty = TRUE) tai varattu (myyty = FALSE)
+-- myyntitapahtuma kortille
+-- ---------------------------------------------------
+CREATE TABLE Myynti (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    kortti_id   INT NOT NULL,
+    asiakas_id  INT NOT NULL,
+    kanava_id   INT NOT NULL,
+    myyty_pvm   DATE,
+    hinta       DECIMAL(10,2),
+    myyty       BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_myynti_kortti
+        FOREIGN KEY (kortti_id) REFERENCES Kortti(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_myynti_asiakas
+        FOREIGN KEY (asiakas_id) REFERENCES Asiakas(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_myynti_kanava
+        FOREIGN KEY (kanava_id) REFERENCES Myyntikanava(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- ---------------------------------------------------
+-- Taulu: Tarjous
+-- Ostajan jättämä tarjous kortista; myyjä hyväksyy tai hylkää
+-- ---------------------------------------------------
+CREATE TABLE Tarjous (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    kortti_id           INT NOT NULL,
+    ostajan_nimi        VARCHAR(100) NOT NULL,
+    ostajan_sahkoposti  VARCHAR(150) NOT NULL,
+    tarjottu_hinta      DECIMAL(10,2) NOT NULL,
+    tila                VARCHAR(20) NOT NULL DEFAULT 'odottaa',
+    lisatty_pvm         DATE NOT NULL,
+    lisatty_aika        TIME NOT NULL,
+    CONSTRAINT fk_tarjous_kortti
+        FOREIGN KEY (kortti_id) REFERENCES Kortti(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+-- Hakuja nopeuttavat indeksit
+CREATE INDEX idx_kortti_kategoria ON Kortti(kategoria_id);
+CREATE INDEX idx_kortti_arvo      ON Kortti(arvo DESC);
+CREATE INDEX idx_myynti_kortti    ON Myynti(kortti_id);
+CREATE INDEX idx_myynti_asiakas   ON Myynti(asiakas_id);
+CREATE INDEX idx_tarjous_kortti   ON Tarjous(kortti_id);
+
+
+-- =====================================================
+-- PokeStock -- esimerkkidata v2 (PAIVITETTY ajantasaisella Drive-listalla)
+-- 265 korttia. Aja pokestock_schema.sql ensin.
+-- Korvaa taysin edellisen 03_esimerkkidata.sql:n sisallon.
+-- =====================================================
+
+USE pokestock;
+
+INSERT INTO Kategoria (nimi) VALUES
+    ('Kiilto'),
+    ('Tähti'),
+    ('Trainer'),
+    ('Erikois'),
+    ('Vanhat'),
+    ('Pienet sarjat'),
+    ('Bulk');
+
+-- 265 korttia, jarjestetty arvokkaimmasta halvimpaan
+INSERT INTO Kortti (nimi, kategoria_id, kunto, arvo, lisatty_pvm, lisatty_aika) VALUES
+    ('Pokémon Center Lady 105/106', 1, 'NM', 99.95, '2026-09-26', '08:01:00'),
+    ('Garchomp C LV.X 145/147', 1, 'NM', 86.95, '2026-09-26', '08:02:00'),
+    ('Lillie 147/149', 1, 'NM', 65.95, '2026-09-26', '08:03:00'),
+    ('Ampharos 105/123', 5, 'NM', 54.95, '2026-09-26', '08:04:00'),
+    ('Magmortar LV.X 123/123', 2, 'NM/M', 53.95, '2026-09-26', '08:05:00'),
+    ('Espeon EX 52/122', 1, 'NM', 41.95, '2026-09-26', '08:06:00'),
+    ('Articuno GX 154/168', 1, 'NM', 37.95, '2026-09-26', '08:07:00'),
+    ('Ash''s Pikachu SM113', 4, 'NM', 35.82, '2026-09-26', '08:08:00'),
+    ('Charizard EX 12/108', 1, 'NM', 32.95, '2026-09-26', '08:09:00'),
+    ('Raichu 10/123', 2, 'NM/M', 31.95, '2026-09-26', '08:10:00'),
+    ('Eevee 155/214', 1, 'NM', 26.95, '2026-09-26', '08:11:00'),
+    ('Double Colorless Energy 166/145', 1, 'NM', 24.95, '2026-09-26', '08:12:00'),
+    ('Faba 208/214', 1, 'NM', 24, '2026-09-26', '08:13:00'),
+    ('Abra 46/144', 5, 'NM', 23, '2026-09-26', '08:14:00'),
+    ('Quagsire 9/123', 5, 'NM', 16, '2026-09-26', '08:15:00'),
+    ('Spidops ex 243/198', 1, 'NM', 15.5, '2026-09-26', '08:16:00'),
+    ('Xerneas 091/086', 1, 'NM', 15.5, '2026-09-26', '08:17:00'),
+    ('Azumarill 2/123', 5, 'NM', 13.5, '2026-09-26', '08:18:00'),
+    ('Voltorb 85/112', 5, 'NM', 13, '2026-09-26', '08:19:00'),
+    ('Lapras 24/123', 2, 'NM/M', 13, '2026-09-26', '08:20:00'),
+    ('Blastoise EX 21/108', 1, 'NM', 12.5, '2026-09-26', '08:21:00'),
+    ('Heracross 43/123', 5, 'NM', 12, '2026-09-26', '08:22:00'),
+    ('Life Dew 107/116', 1, 'NM', 9.5, '2026-09-26', '08:23:00'),
+    ('Double Colorless Energy 103/123', 3, 'NM', 9.5, '2026-09-26', '08:24:00'),
+    ('Sunflora 31/123', 2, 'NM/M', 9, '2026-09-26', '08:25:00'),
+    ('Muscle Band 121/146', 1, 'NM', 8.95, '2026-09-26', '08:26:00'),
+    ('Gold Potion 140/149', 1, 'NM', 8, '2026-09-26', '08:27:00'),
+    ('Jumpluff 6/123', 5, 'NM', 8, '2026-09-26', '08:28:00'),
+    ('Surfing Pikachu VMAX 009/025', 1, 'NM', 7.36, '2026-09-26', '08:29:00'),
+    ('Tapu Koko (Prism Star) 51/181', 1, 'NM', 6.5, '2026-09-26', '08:30:00'),
+    ('Tyranitar 85/181', 1, 'NM', 6, '2026-09-26', '08:31:00'),
+    ('Persian 27/123', 2, 'NM/M', 6, '2026-09-26', '08:32:00'),
+    ('Magcargo 45/106', 1, 'NM', 5, '2026-09-26', '08:33:00'),
+    ('Rayquaza 106/145', 2, 'NM/M', 5, '2026-09-26', '08:34:00'),
+    ('Espurr 095/088', 1, 'NM', 4.47, '2026-09-26', '08:35:00'),
+    ('Mewtwo 51/108', 5, 'NM', 4.25, '2026-09-26', '08:36:00'),
+    ('Black Market (Prism Star) 134/181', 1, 'NM', 4, '2026-09-26', '08:37:00'),
+    ('Quilava 49/123', 2, 'NM/M', 4, '2026-09-26', '08:38:00'),
+    ('Krookodile 71/146', 2, 'NM/M', 3.75, '2026-09-26', '08:39:00'),
+    ('Kartana 101/168', 2, 'NM/M', 3.75, '2026-09-26', '08:40:00'),
+    ('Gyarados 31/113', 2, 'NM/M', 3.75, '2026-09-26', '08:41:00'),
+    ('Mew 011/025', 1, 'NM', 3.32, '2026-09-26', '08:42:00'),
+    ('Genesect 10/101', 1, 'NM', 3, '2026-09-26', '08:43:00'),
+    ('Turtonator GX 18/145', 1, 'NM', 3, '2026-09-26', '08:44:00'),
+    ('Here Comes Team Rocket! 113/108', 3, 'NM', 3, '2026-09-26', '08:45:00'),
+    ('Sharpedo 22/109', 5, 'NM', 3, '2026-09-26', '08:46:00'),
+    ('Rayquaza 153/217', 7, 'NM', 3.0, '2026-09-26', '08:47:00'),
+    ('Pikachu 60/64', 5, 'NM', 2.98, '2026-09-26', '08:48:00'),
+    ('Mewtwo EX XY107', 1, 'NM', 2.76, '2026-09-26', '08:49:00'),
+    ('Heat Factory (Prism Star) 178/214', 1, 'NM', 2.75, '2026-09-26', '08:50:00'),
+    ('Crobat 66/214', 1, 'NM', 2.75, '2026-09-26', '08:51:00'),
+    ('Flareon SM186', 4, 'NM', 2.62, '2026-09-26', '08:52:00'),
+    ('Flareon SM186', 4, 'NM', 2.62, '2026-09-26', '08:53:00'),
+    ('Geodude 110/165', 5, 'NM', 2.5, '2026-09-26', '08:54:00'),
+    ('Team Aqua''s Seviper 17/95', 5, 'NM', 2.25, '2026-09-26', '08:55:00'),
+    ('Alolan Sandslash 20/145', 1, 'NM', 2, '2026-09-26', '08:56:00'),
+    ('Shiinotic 17/149', 1, 'NM', 2, '2026-09-26', '08:57:00'),
+    ('Mudsdale 76/145', 1, 'NM', 1.75, '2026-09-26', '08:58:00'),
+    ('Lunala 015/025', 1, 'NM', 1.75, '2026-09-26', '08:59:00'),
+    ('Ampharos 049/198', 1, 'NM', 1.75, '2026-09-26', '09:00:00'),
+    ('Victreebel 3/145', 2, 'NM/M', 1.75, '2026-09-26', '09:01:00'),
+    ('Malamar 76/146', 1, 'NM', 1.7, '2026-09-26', '09:02:00'),
+    ('Yveltal 019/025', 1, 'NM', 1.5, '2026-09-26', '09:03:00'),
+    ('Max Potion 103/122', 1, 'NM', 1.5, '2026-09-26', '09:04:00'),
+    ('Cassius 115/146', 1, 'NM', 1.5, '2026-09-26', '09:05:00'),
+    ('Caitlin 78/101', 1, 'NM', 1.5, '2026-09-26', '09:06:00'),
+    ('Stoutland 110/146', 1, 'NM', 1.5, '2026-09-26', '09:07:00'),
+    ('Stoutland 176/236', 1, 'NM', 1.5, '2026-09-26', '09:08:00'),
+    ('Charizard Spirit Link 75/108', 3, 'NM', 1.5, '2026-09-26', '09:09:00'),
+    ('Rainbow Energy 131/146', 3, 'NM', 1.5, '2026-09-26', '09:10:00'),
+    ('Counter Energy 100/111', 3, 'NM', 1.5, '2026-09-26', '09:11:00'),
+    ('Draw Energy 209/236', 3, 'NM', 1.5, '2026-09-26', '09:12:00'),
+    ('Draw Energy 209/236', 3, 'NM', 1.5, '2026-09-26', '09:13:00'),
+    ('Phione 57/236', 5, 'NM', 1.5, '2026-09-26', '09:14:00'),
+    ('Qwilfish 50/123', 5, 'NM', 1.5, '2026-09-26', '09:15:00'),
+    ('Starmie 31/108', 5, 'NM', 1.5, '2026-09-26', '09:16:00'),
+    ('Revive 85/108', 5, 'NM', 1.5, '2026-09-26', '09:17:00'),
+    ('Electabuzz 41/108', 5, 'NM', 1.5, '2026-09-26', '09:18:00'),
+    ('Hoopa 141/217', 7, 'NM', 1.5, '2026-09-26', '09:19:00'),
+    ('Mightyena 87/181', 2, 'NM/M', 1.5, '2026-09-26', '09:20:00'),
+    ('Honchkrow 79/145', 2, 'NM/M', 1.5, '2026-09-26', '09:21:00'),
+    ('Alolan Muk 84/181', 2, 'NM/M', 1.5, '2026-09-26', '09:22:00'),
+    ('Pinsir 9/181', 2, 'NM/M', 1.5, '2026-09-26', '09:23:00'),
+    ('Raticate 88/122', 2, 'NM/M', 1.5, '2026-09-26', '09:24:00'),
+    ('Empoleon 56/236', 2, 'NM/M', 1.5, '2026-09-26', '09:25:00'),
+    ('Zygarde 53/124', 2, 'NM/M', 1.5, '2026-09-26', '09:26:00'),
+    ('Galarian Articuno V 058/198', 1, 'NM', 1.38, '2026-09-26', '09:27:00'),
+    ('Delphox 13/124', 1, 'NM', 1.25, '2026-09-26', '09:28:00'),
+    ('Krookodile 85/149', 1, 'NM', 1.25, '2026-09-26', '09:29:00'),
+    ('Pokédex 82/108', 3, 'NM', 1.25, '2026-09-26', '09:30:00'),
+    ('Professor''s Research (Professor Oak) 024/025', 1, 'NM', 1.1, '2026-09-26', '09:31:00'),
+    ('Professor Oak''s Hint 84/108', 1, 'NM', 1, '2026-09-26', '09:32:00'),
+    ('Welder 189/214', 1, 'NM', 1, '2026-09-26', '09:33:00'),
+    ('Electrode 40/108', 1, 'NM', 1, '2026-09-26', '09:34:00'),
+    ('Switch 88/108', 3, 'NM', 1, '2026-09-26', '09:35:00'),
+    ('Ampharos 029/086', 7, 'NM', 1.0, '2026-09-26', '09:36:00'),
+    ('Trevenant 039/086', 7, 'NM', 1.0, '2026-09-26', '09:37:00'),
+    ('Trevenant 039/086', 7, 'NM', 1.0, '2026-09-26', '09:38:00'),
+    ('Vileplume 003/094', 7, 'NM', 1.0, '2026-09-26', '09:39:00'),
+    ('Yveltal 088/132', 7, 'NM', 1.0, '2026-09-26', '09:40:00'),
+    ('Piplup 20/25', 6, 'NM', 0.98, '2026-09-26', '09:41:00'),
+    ('Piplup 20/25', 6, 'NM', 0.98, '2026-09-26', '09:42:00'),
+    ('Piplup 20/25', 6, 'NM', 0.98, '2026-09-26', '09:43:00'),
+    ('Mudkip 19/25', 6, 'NM', 0.84, '2026-09-26', '09:44:00'),
+    ('Frogadier 40/146', 1, 'NM', 0.75, '2026-09-26', '09:45:00'),
+    ('Frozen City 100/116', 1, 'NM', 0.75, '2026-09-26', '09:46:00'),
+    ('Reshiram 2/25', 1, 'NM', 0.75, '2026-09-26', '09:47:00'),
+    ('Blastoise Spirit Link 73/108', 3, 'NM', 0.75, '2026-09-26', '09:48:00'),
+    ('Galarian Zigzagoon 130/217', 7, 'NM', 0.75, '2026-09-26', '09:49:00'),
+    ('Swellow 104/145', 2, 'NM/M', 0.75, '2026-09-26', '09:50:00'),
+    ('Lapras 5/12', 1, 'NM', 0.64, '2026-09-26', '09:51:00'),
+    ('Parasect 48/123', 5, 'NM', 0.63, '2026-09-26', '09:52:00'),
+    ('Totodile 18/25', 6, 'NM', 0.62, '2026-09-26', '09:53:00'),
+    ('Metal Energy 80/90', 3, 'NM', 0.59, '2026-09-26', '09:54:00'),
+    ('Sobble 24/25', 6, 'NM', 0.57, '2026-09-26', '09:55:00'),
+    ('Sobble 24/25', 6, 'NM', 0.57, '2026-09-26', '09:56:00'),
+    ('Sobble 24/25', 6, 'NM', 0.57, '2026-09-26', '09:57:00'),
+    ('Alolan Sandshrew 4/12', 1, 'NM', 0.55, '2026-09-26', '09:58:00'),
+    ('Oddish 58/64', 5, 'NM', 0.55, '2026-09-26', '09:59:00'),
+    ('Pokémon Fan Club 94/106', 1, 'NM', 0.5, '2026-09-26', '10:00:00'),
+    ('Brock''s Grit 74/108', 1, 'NM', 0.5, '2026-09-26', '10:01:00'),
+    ('Repel 130/149', 1, 'NM', 0.5, '2026-09-26', '10:02:00'),
+    ('Doctor 134/198', 1, 'NM', 0.5, '2026-09-26', '10:03:00'),
+    ('Wishful Baton 128/147', 1, 'NM', 0.5, '2026-09-26', '10:04:00'),
+    ('Tormenting Spray 125/147', 1, 'NM', 0.5, '2026-09-26', '10:05:00'),
+    ('Revavroom 142/198', 1, 'NM', 0.5, '2026-09-26', '10:06:00'),
+    ('Rattata 66/108', 5, 'NM', 0.5, '2026-09-26', '10:07:00'),
+    ('Pidgeot Spirit Link 81/108', 5, 'NM', 0.5, '2026-09-26', '10:08:00'),
+    ('Pidgeot Spirit Link 81/108', 5, 'NM', 0.5, '2026-09-26', '10:09:00'),
+    ('Eevee 12/12', 1, 'NM', 0.46, '2026-09-26', '10:10:00'),
+    ('Chikorita 2/25', 6, 'NM', 0.46, '2026-09-26', '10:11:00'),
+    ('Watchog 071/086', 7, 'Unranked', 0.46, '2026-09-26', '10:12:00'),
+    ('Staryu 56/64', 5, 'NM', 0.45, '2026-09-26', '10:13:00'),
+    ('Snivy 5/25', 6, 'NM', 0.45, '2026-09-26', '10:14:00'),
+    ('Electivire 30/111', 5, 'NM', 0.44, '2026-09-26', '10:15:00'),
+    ('Scorbunny 16/25', 6, 'NM', 0.43, '2026-09-26', '10:16:00'),
+    ('Drowzee 49/108', 5, 'NM', 0.42, '2026-09-26', '10:17:00'),
+    ('Starmie 73/160', 5, 'NM', 0.41, '2026-09-26', '10:18:00'),
+    ('Turtwig 4/25', 6, 'NM', 0.4, '2026-09-26', '10:19:00'),
+    ('Treecko 3/25', 6, 'NM', 0.39, '2026-09-26', '10:20:00'),
+    ('Rowlet 7/25', 6, 'NM', 0.38, '2026-09-26', '10:21:00'),
+    ('Charmeleon 10/108', 5, 'NM', 0.37, '2026-09-26', '10:22:00'),
+    ('Chimchar 12/25', 6, 'NM', 0.37, '2026-09-26', '10:23:00'),
+    ('Cosmog 013/025', 1, 'NM', 0.35, '2026-09-26', '10:24:00'),
+    ('Cosmog 013/025', 1, 'NM', 0.35, '2026-09-26', '10:25:00'),
+    ('Diglett 55/108', 5, 'NM', 0.32, '2026-09-26', '10:26:00'),
+    ('Onix 61/108', 5, 'NM', 0.32, '2026-09-26', '10:27:00'),
+    ('Diglett 55/108', 5, 'NM', 0.32, '2026-09-26', '10:28:00'),
+    ('Pikachu 35/108', 5, 'NM', 0.32, '2026-09-26', '10:29:00'),
+    ('Snorlax 80/106', 2, 'Unranked', 0.32, '2026-09-26', '10:30:00'),
+    ('Carbink 117/217', 7, 'NM', 0.31, '2026-09-26', '10:31:00'),
+    ('Aerodactyl 13/99', 1, 'NM', 0.3, '2026-09-26', '10:32:00'),
+    ('Clamperl 49/160', 1, 'NM', 0.3, '2026-09-26', '10:33:00'),
+    ('Corphish 42/160', 1, 'NM', 0.3, '2026-09-26', '10:34:00'),
+    ('Solgaleo GX SM16', 1, 'NM', 0.3, '2026-09-26', '10:35:00'),
+    ('Life Forest (Prism Star) 180/214', 1, 'NM', 0.3, '2026-09-26', '10:36:00'),
+    ('Magnemite 80/156', 1, 'NM', 0.3, '2026-09-26', '10:37:00'),
+    ('Weepinbell 2/111', 1, 'NM', 0.3, '2026-09-26', '10:38:00'),
+    ('Clefairy 144/236', 1, 'NM', 0.3, '2026-09-26', '10:39:00'),
+    ('Jangmo-o 98/145', 1, 'NM', 0.3, '2026-09-26', '10:40:00'),
+    ('Delibird 57/214', 1, 'NM', 0.3, '2026-09-26', '10:41:00'),
+    ('Loudred 136/185', 1, 'NM', 0.3, '2026-09-26', '10:42:00'),
+    ('Kakuna 4/146', 1, 'NM', 0.3, '2026-09-26', '10:43:00'),
+    ('Bidoof 106/146', 1, 'NM', 0.3, '2026-09-26', '10:44:00'),
+    ('Whismur 116/168', 1, 'NM', 0.3, '2026-09-26', '10:45:00'),
+    ('Durant 128/214', 1, 'NM', 0.3, '2026-09-26', '10:46:00'),
+    ('Taillow 103/145', 1, 'NM', 0.3, '2026-09-26', '10:47:00'),
+    ('Seedot 5/106', 1, 'NM', 0.3, '2026-09-26', '10:48:00'),
+    ('Metapod 2/106', 1, 'NM', 0.3, '2026-09-26', '10:49:00'),
+    ('Cherrim 11/156', 1, 'NM', 0.3, '2026-09-26', '10:50:00'),
+    ('Sharpedo 28/145', 1, 'NM', 0.3, '2026-09-26', '10:51:00'),
+    ('Growlithe 1/12', 1, 'NM', 0.3, '2026-09-26', '10:52:00'),
+    ('Dratini 9/12', 1, 'NM', 0.3, '2026-09-26', '10:53:00'),
+    ('Arctozolt 066/189', 1, 'NM', 0.3, '2026-09-26', '10:54:00'),
+    ('Mankey 8/12', 1, 'NM', 0.3, '2026-09-26', '10:55:00'),
+    ('Pikachu 25/25', 1, 'NM', 0.3, '2026-09-26', '10:56:00'),
+    ('Masquerain 8/149', 1, 'NM', 0.3, '2026-09-26', '10:57:00'),
+    ('Skuntank 55/106', 1, 'NM', 0.3, '2026-09-26', '10:58:00'),
+    ('Moltres ex 013/094', 7, 'Unranked', 0.3, '2026-09-26', '10:59:00'),
+    ('Zekrom 010/025', 1, 'NM', 0.29, '2026-09-26', '11:00:00'),
+    ('Charmander 9/108', 5, 'NM', 0.29, '2026-09-26', '11:01:00'),
+    ('Team Aqua''s Poochyena 55/95', 1, 'NM', 0.28, '2026-09-26', '11:02:00'),
+    ('Slugma 67/90', 6, 'NM', 0.28, '2026-09-26', '11:03:00'),
+    ('Fasasnob (Pidgeot, saksa) 86/114', 2, 'Unranked', 0.28, '2026-09-26', '11:04:00'),
+    ('Caterpie 3/108', 5, 'NM', 0.27, '2026-09-26', '11:05:00'),
+    ('Caterpie 3/108', 5, 'NM', 0.27, '2026-09-26', '11:06:00'),
+    ('Wishiwashi 31/70', 6, 'NM', 0.27, '2026-09-26', '11:07:00'),
+    ('Meditite 103/217', 7, 'NM', 0.25, '2026-09-26', '11:08:00'),
+    ('Magikarp 33/108', 5, 'NM', 0.24, '2026-09-26', '11:09:00'),
+    ('Magikarp 33/108', 5, 'NM', 0.24, '2026-09-26', '11:10:00'),
+    ('Salazzle 035/217', 7, 'NM', 0.24, '2026-09-26', '11:11:00'),
+    ('Growlithe 10/99', 6, 'NM', 0.23, '2026-09-26', '11:12:00'),
+    ('Yanmega 4/119', 2, 'Unranked', 0.23, '2026-09-26', '11:13:00'),
+    ('Raticate 34/90', 2, 'Unranked', 0.23, '2026-09-26', '11:14:00'),
+    ('Golem 47/106', 2, 'Unranked', 0.23, '2026-09-26', '11:15:00'),
+    ('Drapion 53/156', 2, 'Unranked', 0.23, '2026-09-26', '11:16:00'),
+    ('Bagon 42/70', 6, 'NM', 0.2, '2026-09-26', '11:17:00'),
+    ('Froakie 020/086', 7, 'NM', 0.2, '2026-09-26', '11:18:00'),
+    ('Tangela 006/132', 7, 'NM', 0.2, '2026-09-26', '11:19:00'),
+    ('Ninetales 020/133', 7, 'Unranked', 0.2, '2026-09-26', '11:20:00'),
+    ('Beedrill 5/146', 1, 'NM', 0.18, '2026-09-26', '11:21:00'),
+    ('Magcargo 21/146', 1, 'NM', 0.18, '2026-09-26', '11:22:00'),
+    ('Gastly 92', 4, 'NM', 0.18, '2026-09-26', '11:23:00'),
+    ('Gastly 92', 4, 'NM', 0.18, '2026-09-26', '11:24:00'),
+    ('Kangaskhan 55/70', 6, 'NM', 0.18, '2026-09-26', '11:25:00'),
+    ('Furret 82/106', 2, 'Unranked', 0.18, '2026-09-26', '11:26:00'),
+    ('Golurk 72/101', 2, 'Unranked', 0.18, '2026-09-26', '11:27:00'),
+    ('Sandshrew 54/108', 5, 'NM', 0.16, '2026-09-26', '11:28:00'),
+    ('Slugma 20/146', 1, 'NM', 0.15, '2026-09-26', '11:29:00'),
+    ('Kabuto 77/181', 1, 'NM', 0.15, '2026-09-26', '11:30:00'),
+    ('Litleo 50/214', 1, 'NM', 0.15, '2026-09-26', '11:31:00'),
+    ('Skiddo 011/198', 1, 'NM', 0.15, '2026-09-26', '11:32:00'),
+    ('Gothita 073/189', 1, 'NM', 0.15, '2026-09-26', '11:33:00'),
+    ('Omanyte 56/108', 1, 'NM', 0.15, '2026-09-26', '11:34:00'),
+    ('Dodrio 99/146', 1, 'NM', 0.15, '2026-09-26', '11:35:00'),
+    ('Zubat 64/214', 1, 'NM', 0.15, '2026-09-26', '11:36:00'),
+    ('Gastly 36/111', 1, 'NM', 0.15, '2026-09-26', '11:37:00'),
+    ('Tyrogue 100/214', 1, 'NM', 0.15, '2026-09-26', '11:38:00'),
+    ('Vanillish 34/145', 1, 'NM', 0.15, '2026-09-26', '11:39:00'),
+    ('Pidgey 122/181', 1, 'NM', 0.15, '2026-09-26', '11:40:00'),
+    ('Petilil 4/145', 1, 'NM', 0.15, '2026-09-26', '11:41:00'),
+    ('Rockruff 73/145', 1, 'NM', 0.15, '2026-09-26', '11:42:00'),
+    ('Doublade 61/122', 1, 'NM', 0.15, '2026-09-26', '11:43:00'),
+    ('Weepinbell 2/145', 1, 'NM', 0.15, '2026-09-26', '11:44:00'),
+    ('Piloswine 20/111', 1, 'NM', 0.15, '2026-09-26', '11:45:00'),
+    ('Noctowl 107/147', 1, 'NM', 0.15, '2026-09-26', '11:46:00'),
+    ('Mudkip 32/168', 1, 'NM', 0.15, '2026-09-26', '11:47:00'),
+    ('Buneary 84/106', 1, 'NM', 0.15, '2026-09-26', '11:48:00'),
+    ('Baltoy 57/163', 1, 'NM', 0.15, '2026-09-26', '11:49:00'),
+    ('Skwovet 152/189', 1, 'NM', 0.15, '2026-09-26', '11:50:00'),
+    ('Metang 94/168', 1, 'NM', 0.15, '2026-09-26', '11:51:00'),
+    ('Flabébé 62/106', 1, 'NM', 0.15, '2026-09-26', '11:52:00'),
+    ('Braixen 25/146', 1, 'NM', 0.15, '2026-09-26', '11:53:00'),
+    ('Shelmet 8/111', 1, 'NM', 0.15, '2026-09-26', '11:54:00'),
+    ('Ekans 47/146', 1, 'NM', 0.15, '2026-09-26', '11:55:00'),
+    ('Koffing 73/214', 1, 'NM', 0.15, '2026-09-26', '11:56:00'),
+    ('Carvanha 27/145', 1, 'NM', 0.15, '2026-09-26', '11:57:00'),
+    ('Roselia 8/106', 1, 'NM', 0.15, '2026-09-26', '11:58:00'),
+    ('Granbull 91/149', 1, 'NM', 0.15, '2026-09-26', '11:59:00'),
+    ('Trapinch 32/70', 1, 'NM', 0.15, '2026-09-26', '12:00:00'),
+    ('Gothita 52/145', 1, 'NM', 0.15, '2026-09-26', '12:01:00'),
+    ('Illumise 71/106', 1, 'NM', 0.15, '2026-09-26', '12:02:00'),
+    ('Shinx 74/99', 1, 'NM', 0.15, '2026-09-26', '12:03:00'),
+    ('Jigglypuff 14/18', 1, 'NM', 0.15, '2026-09-26', '12:04:00'),
+    ('Magmar 20/108', 5, 'NM', 0.15, '2026-09-26', '12:05:00'),
+    ('Porygon 71/108', 5, 'NM', 0.15, '2026-09-26', '12:06:00'),
+    ('Wormadam 44/124', 1, 'NM', 0.14, '2026-09-26', '12:07:00'),
+    ('Litten 26/214', 1, 'NM', 0.14, '2026-09-26', '12:08:00'),
+    ('Simisear 23/146', 1, 'NM', 0.14, '2026-09-26', '12:09:00'),
+    ('Warp Energy 95/100', 1, 'NM', 0.14, '2026-09-26', '12:10:00'),
+    ('Snom 052/217', 7, 'NM', 0.14, '2026-09-26', '12:11:00'),
+    ('Poliwhirl 24/108', 5, 'NM', 0.13, '2026-09-26', '12:12:00'),
+    ('Tangela 8/108', 5, 'NM', 0.13, '2026-09-26', '12:13:00'),
+    ('Staryu 020/088', 7, 'NM', 0.11, '2026-09-26', '12:14:00'),
+    ('Doduo 69/108', 5, 'NM', 0.1, '2026-09-26', '12:15:00'),
+    ('Litleo 19/106', 1, 'NM', 0.09, '2026-09-26', '12:16:00'),
+    ('Ponyta 14/106', 1, 'NM', 0.09, '2026-09-26', '12:17:00'),
+    ('Buizel 28/106', 1, 'NM', 0.09, '2026-09-26', '12:18:00'),
+    ('Spheal 037/198', 1, 'NM', 0.09, '2026-09-26', '12:19:00'),
+    ('Linoone 112/160', 1, 'NM', 0.09, '2026-09-26', '12:20:00'),
+    ('Weedle 5/108', 5, 'NM', 0.09, '2026-09-26', '12:21:00'),
+    ('Beautifly 013/217', 7, 'NM', 0.09, '2026-09-26', '12:22:00'),
+    ('Dedenne 029/088', 7, 'NM', 0.07, '2026-09-26', '12:23:00'),
+    ('Gastly 47/108', 5, 'NM', 0.05, '2026-09-26', '12:24:00'),
+    ('Gastly 47/108', 5, 'NM', 0.05, '2026-09-26', '12:25:00');
+
+INSERT INTO Asiakas (nimi, sahkoposti, kaupunki) VALUES
+    ('Matti Meikäläinen', 'matti.m@example.com', 'Helsinki'),
+    ('Liisa Virtanen', 'liisa.virtanen@example.com', 'Espoo'),
+    ('Pekka Korhonen', 'pekka.k@example.com', 'Tampere'),
+    ('Aino Nieminen', 'aino.nieminen@example.com', 'Helsinki'),
+    ('Jari Mäkinen', NULL, 'Turku');
+
+INSERT INTO Myyntikanava (nimi, provisio_prosentti) VALUES
+    ('Tori.fi', 0.00),
+    ('Cardmarket', 5.00),
+    ('Facebook Marketplace', 0.00),
+    ('Korttikauppa (vaihto)', 10.00);
+
+-- Myyntitapahtumat: 8 toteutunutta myyntiä ja 2 varausta (myyty = FALSE)
+INSERT INTO Myynti (kortti_id, asiakas_id, kanava_id, myyty_pvm, hinta, myyty) VALUES
+    (17, 1, 1, '2026-09-25', 15.00, TRUE),
+    (2,  2, 2, '2026-09-28', 82.00, TRUE),
+    (9,  2, 2, '2026-09-30', 30.00, TRUE),
+    (8,  3, 3, '2026-10-01', 35.00, TRUE),
+    (14, 4, 1, '2026-10-02', 20.00, TRUE),
+    (21, 1, 1, '2026-10-04', 12.00, TRUE),
+    (12, 3, 4, '2026-10-05', 22.00, TRUE),
+    (6,  2, 2, '2026-10-07', 40.00, TRUE),
+    (1,  4, 3, NULL, 95.00, FALSE),
+    (11, 1, 1, NULL, 25.00, FALSE);
+
+-- Tarjoukset: 3 odottavaa, 2 hyväksyttyä ja 2 hylättyä
+INSERT INTO Tarjous (kortti_id, ostajan_nimi, ostajan_sahkoposti, tarjottu_hinta, tila, lisatty_pvm, lisatty_aika) VALUES
+    (3,  'Emma Virtanen',  'emma.v@example.com',      60.00, 'odottaa',    '2026-10-08', '18:12:00'),
+    (5,  'Ville Laine',    'ville.laine@example.com', 45.00, 'hylätty',    '2026-10-08', '20:40:00'),
+    (5,  'Sara Koskinen',  'sara.k@example.com',      52.00, 'hyväksytty', '2026-10-09', '09:05:00'),
+    (7,  'Emma Virtanen',  'emma.v@example.com',      35.00, 'odottaa',    '2026-10-10', '16:30:00'),
+    (10, 'Oskari Heikkinen','oskari.h@example.com',   25.00, 'hylätty',    '2026-10-11', '12:00:00'),
+    (13, 'Ville Laine',    'ville.laine@example.com', 22.00, 'hyväksytty', '2026-10-12', '14:45:00'),
+    (16, 'Sara Koskinen',  'sara.k@example.com',      14.00, 'odottaa',    '2026-10-13', '19:20:00');
